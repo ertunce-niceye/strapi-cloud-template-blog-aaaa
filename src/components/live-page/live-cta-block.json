@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_live_page_live_cta_blocks",
+  "info": {
+    "displayName": "Live_CTA_Block"
+  },
+  "options": {},
+  "attributes": {
+    "Title": {
+      "type": "string"
+    },
+    "Buttons": {
+      "type": "component",
+      "component": "webinar-details.custom-action-button",
+      "repeatable": true
+    }
+  },
+  "config": {}
+}

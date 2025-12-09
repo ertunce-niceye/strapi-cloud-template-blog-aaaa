@@ -1,0 +1,20 @@
+{
+  "collectionName": "components_page_sections_section_speaker_grids",
+  "info": {
+    "displayName": "Section_Speaker_Grid"
+  },
+  "options": {},
+  "attributes": {
+    "Title": {
+      "type": "string"
+    },
+    "Show_Bio_Popup": {
+      "type": "boolean",
+      "default": true
+    },
+    "Bio_button": {
+      "type": "string"
+    }
+  },
+  "config": {}
+}

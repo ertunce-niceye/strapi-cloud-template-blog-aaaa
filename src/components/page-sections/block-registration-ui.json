@@ -1,0 +1,14 @@
+{
+  "collectionName": "components_page_sections_block_registration_uis",
+  "info": {
+    "displayName": "Block_Registration_UI"
+  },
+  "options": {},
+  "attributes": {
+    "Enable_Sign_In_Only": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "config": {}
+}

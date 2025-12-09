@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_form_fields_field_text_inputs",
+  "info": {
+    "displayName": "Field_Text_Input"
+  },
+  "options": {},
+  "attributes": {
+    "Label": {
+      "type": "string",
+      "required": false
+    },
+    "Placeholder": {
+      "type": "string"
+    },
+    "Is_Required": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "config": {}
+}

@@ -1,0 +1,26 @@
+{
+  "collectionName": "components_page_sections_section_heroes",
+  "info": {
+    "displayName": "Section_Hero"
+  },
+  "options": {},
+  "attributes": {
+    "Headline": {
+      "type": "string",
+      "required": true
+    },
+    "Image": {
+      "type": "media",
+      "multiple": true,
+      "required": true,
+      "allowedTypes": [
+        "images",
+        "videos"
+      ]
+    },
+    "Description": {
+      "type": "text"
+    }
+  },
+  "config": {}
+}

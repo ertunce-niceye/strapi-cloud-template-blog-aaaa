@@ -1,0 +1,41 @@
+{
+  "kind": "singleType",
+  "collectionName": "platform_settings",
+  "info": {
+    "singularName": "platform-setting",
+    "pluralName": "platform-settings",
+    "displayName": "Platform_Settings"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "Main_Logo": {
+      "type": "media",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "Navigation_Link": {
+      "type": "component",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "component": "global.navigation-link",
+      "repeatable": true
+    }
+  }
+}

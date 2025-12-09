@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_webinar_details_reminder_emails",
+  "info": {
+    "displayName": "Reminder_Email"
+  },
+  "options": {},
+  "attributes": {
+    "Internal_Label": {
+      "type": "string"
+    },
+    "Days_Before_Event": {
+      "type": "integer"
+    },
+    "Email_Subject": {
+      "type": "string"
+    },
+    "Email_Body": {
+      "type": "blocks"
+    },
+    "Template_ID": {
+      "type": "string"
+    }
+  },
+  "config": {}
+}

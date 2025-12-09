@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_global_footer_action_links",
+  "info": {
+    "displayName": "Footer_Action_Link"
+  },
+  "options": {},
+  "attributes": {
+    "Label": {
+      "type": "string"
+    },
+    "URL": {
+      "type": "string"
+    }
+  },
+  "config": {}
+}

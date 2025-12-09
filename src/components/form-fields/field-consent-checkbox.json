@@ -1,0 +1,33 @@
+{
+  "collectionName": "components_form_fields_field_consent_checkboxes",
+  "info": {
+    "displayName": "Field_Consent_Checkbox"
+  },
+  "options": {},
+  "attributes": {
+    "Label": {
+      "type": "string"
+    },
+    "Consent_Text": {
+      "type": "blocks"
+    },
+    "Compliance_Tag": {
+      "type": "enumeration",
+      "enum": [
+        "E-consent",
+        "Privacy Policy ",
+        "Terms of Use",
+        "GDPR",
+        "KVKK",
+        "HIPAA",
+        "Others"
+      ]
+    },
+    "Is_Required": {
+      "type": "boolean",
+      "required": true,
+      "default": true
+    }
+  },
+  "config": {}
+}

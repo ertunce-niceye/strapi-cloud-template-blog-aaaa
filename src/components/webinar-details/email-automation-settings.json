@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_webinar_details_email_automation_settings",
+  "info": {
+    "displayName": "Email_Automation_Settings"
+  },
+  "options": {},
+  "attributes": {
+    "Confirmation_Email_Content": {
+      "type": "blocks"
+    },
+    "Post_Webinar_Follow_Up_Email_Content": {
+      "type": "blocks"
+    },
+    "Reminder_Emails": {
+      "type": "component",
+      "component": "webinar-details.reminder-email",
+      "repeatable": true
+    }
+  },
+  "config": {}
+}

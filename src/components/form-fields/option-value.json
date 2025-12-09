@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_form_fields_option_values",
+  "info": {
+    "displayName": "Option_Value"
+  },
+  "options": {},
+  "attributes": {
+    "Value": {
+      "type": "string"
+    },
+    "Is_Required": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "config": {}
+}

@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_global_navigation_links",
+  "info": {
+    "displayName": "Navigation_Link"
+  },
+  "options": {},
+  "attributes": {
+    "Label": {
+      "type": "string"
+    },
+    "URL": {
+      "type": "string"
+    },
+    "Open_In_New_Tab": {
+      "type": "boolean"
+    }
+  },
+  "config": {}
+}

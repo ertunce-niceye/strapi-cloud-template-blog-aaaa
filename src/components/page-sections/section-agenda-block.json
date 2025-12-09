@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_page_sections_section_agenda_blocks",
+  "info": {
+    "displayName": "Section_Agenda_Block"
+  },
+  "options": {},
+  "attributes": {
+    "Agenda_Items": {
+      "type": "component",
+      "component": "page-sections.agenda-item",
+      "repeatable": true
+    }
+  },
+  "config": {}
+}

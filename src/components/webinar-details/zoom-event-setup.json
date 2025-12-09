@@ -1,0 +1,46 @@
+{
+  "collectionName": "components_webinar_details_zoom_event_setups",
+  "info": {
+    "displayName": "Zoom_Event_Setup"
+  },
+  "options": {},
+  "attributes": {
+    "Event_Duration_Minutes": {
+      "type": "integer"
+    },
+    "Enable_Backstage_Settings": {
+      "type": "boolean",
+      "default": true
+    },
+    "Internal_Label": {
+      "type": "string"
+    },
+    "Zoom_Host_Email": {
+      "type": "string",
+      "required": true
+    },
+    "Zoom_Webinar_ID": {
+      "type": "string"
+    },
+    "Zoom_Webinar_UUID": {
+      "type": "string"
+    },
+    "Use_This_Zoom_Setup": {
+      "type": "boolean",
+      "default": true
+    },
+    "Embed_Method": {
+      "type": "enumeration",
+      "required": false,
+      "default": "websdk",
+      "enum": [
+        "websdk",
+        "zoom_link"
+      ]
+    },
+    "Zoom_Passcode": {
+      "type": "string"
+    }
+  },
+  "config": {}
+}

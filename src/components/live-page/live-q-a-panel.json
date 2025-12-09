@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_live_page_live_q_a_panels",
+  "info": {
+    "displayName": "Live_Q_A_Panel"
+  },
+  "options": {},
+  "attributes": {
+    "Title": {
+      "type": "string"
+    },
+    "Description": {
+      "type": "blocks"
+    }
+  },
+  "config": {}
+}

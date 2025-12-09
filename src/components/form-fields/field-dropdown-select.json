@@ -1,0 +1,22 @@
+{
+  "collectionName": "components_form_fields_field_dropdown_selects",
+  "info": {
+    "displayName": "Field_Dropdown_Select"
+  },
+  "options": {},
+  "attributes": {
+    "Label": {
+      "type": "string"
+    },
+    "Options_List": {
+      "type": "component",
+      "component": "form-fields.option-value",
+      "repeatable": true
+    },
+    "Is_Required": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "config": {}
+}

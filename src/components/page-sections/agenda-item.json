@@ -1,0 +1,23 @@
+{
+  "collectionName": "components_page_sections_agenda_items",
+  "info": {
+    "displayName": "Agenda_Item"
+  },
+  "options": {},
+  "attributes": {
+    "Time_Slot": {
+      "type": "string",
+      "required": true
+    },
+    "Topic_Title": {
+      "type": "string",
+      "required": true
+    },
+    "Speaker_Relation": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::speaker.speaker"
+    }
+  },
+  "config": {}
+}

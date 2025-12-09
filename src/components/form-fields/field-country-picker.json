@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_form_fields_field_country_pickers",
+  "info": {
+    "displayName": "Field_CountryPicker"
+  },
+  "options": {},
+  "attributes": {
+    "Label": {
+      "type": "string"
+    },
+    "Is_Required": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "config": {}
+}

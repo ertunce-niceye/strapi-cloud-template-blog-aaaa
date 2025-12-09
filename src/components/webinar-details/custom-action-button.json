@@ -1,0 +1,24 @@
+{
+  "collectionName": "components_webinar_details_custom_action_buttons",
+  "info": {
+    "displayName": "Custom_Action_Button"
+  },
+  "options": {},
+  "attributes": {
+    "Button_Label": {
+      "type": "string"
+    },
+    "Link_URL": {
+      "type": "string"
+    },
+    "Button_Style": {
+      "type": "enumeration",
+      "enum": [
+        "Primary",
+        "Secondary",
+        "Hidden"
+      ]
+    }
+  },
+  "config": {}
+}

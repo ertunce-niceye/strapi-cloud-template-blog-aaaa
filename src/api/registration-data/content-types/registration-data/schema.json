@@ -1,0 +1,65 @@
+{
+  "kind": "collectionType",
+  "collectionName": "registrations_data",
+  "info": {
+    "singularName": "registration-data",
+    "pluralName": "registrations-data",
+    "displayName": "RegistrationData"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "Email_Address": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "required": true
+    },
+    "Webinar": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::webinar.webinar"
+    },
+    "Form_Values": {
+      "type": "json",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "Zoom_Registrant_Id": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "Last_Access_At": {
+      "type": "datetime",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "Slug": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    }
+  }
+}

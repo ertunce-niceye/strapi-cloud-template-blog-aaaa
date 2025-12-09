@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_live_page_live_resources_blocks",
+  "info": {
+    "displayName": "Live_Resources_Block"
+  },
+  "options": {},
+  "attributes": {
+    "Title": {
+      "type": "string"
+    },
+    "Resources": {
+      "type": "component",
+      "component": "webinar-details.custom-action-button",
+      "repeatable": true
+    }
+  },
+  "config": {}
+}
