@@ -1,10 +1,15 @@
 {
   "collectionName": "components_page_sections_section_agenda_blocks",
   "info": {
-    "displayName": "Section_Agenda_Block"
+    "displayName": "Section_AgendaItems"
   },
   "options": {},
   "attributes": {
+    "Title": {
+      "type": "string",
+      "default": "Agenda",
+      "required": false
+    },
     "Agenda_Items": {
       "type": "component",
       "component": "page-sections.agenda-item",

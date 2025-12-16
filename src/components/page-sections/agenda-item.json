@@ -1,15 +1,15 @@
 {
   "collectionName": "components_page_sections_agenda_items",
   "info": {
-    "displayName": "Agenda_Item"
+    "displayName": "Section_Agenda"
   },
   "options": {},
   "attributes": {
-    "Time_Slot": {
+    "Topic_Title": {
       "type": "string",
       "required": true
     },
-    "Topic_Title": {
+    "Time_Slot": {
       "type": "string",
       "required": true
     },

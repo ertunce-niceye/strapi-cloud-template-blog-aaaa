@@ -149,7 +149,7 @@ export interface LivePageLiveResourcesBlock extends Struct.ComponentSchema {
 export interface PageSectionsAgendaItem extends Struct.ComponentSchema {
   collectionName: 'components_page_sections_agenda_items';
   info: {
-    displayName: 'Agenda_Item';
+    displayName: 'Section_Agenda';
   };
   attributes: {
     Speaker_Relation: Schema.Attribute.Relation<
@@ -165,18 +165,15 @@ export interface PageSectionsBlockRegistrationUi
   extends Struct.ComponentSchema {
   collectionName: 'components_page_sections_block_registration_uis';
   info: {
-    displayName: 'Block_Registration_UI';
+    displayName: 'Section_Registration';
   };
-  attributes: {
-    Enable_Sign_In_Only: Schema.Attribute.Boolean &
-      Schema.Attribute.DefaultTo<false>;
-  };
+  attributes: {};
 }
 
 export interface PageSectionsBlockSessionCards extends Struct.ComponentSchema {
   collectionName: 'components_page_sections_block_session_cards';
   info: {
-    displayName: 'Block_Session_Cards';
+    displayName: 'Section_Session';
   };
   attributes: {
     Card_Style: Schema.Attribute.Enumeration<['Simple', 'Detailed Speaker']>;
@@ -187,7 +184,7 @@ export interface PageSectionsBlockSessionCards extends Struct.ComponentSchema {
 export interface PageSectionsRichTextContent extends Struct.ComponentSchema {
   collectionName: 'components_page_sections_rich_text_contents';
   info: {
-    displayName: 'Rich_Text_Content';
+    displayName: 'Section_FreeText';
   };
   attributes: {
     Body_Content: Schema.Attribute.Blocks;
@@ -197,10 +194,22 @@ export interface PageSectionsRichTextContent extends Struct.ComponentSchema {
 export interface PageSectionsSectionAgendaBlock extends Struct.ComponentSchema {
   collectionName: 'components_page_sections_section_agenda_blocks';
   info: {
-    displayName: 'Section_Agenda_Block';
+    displayName: 'Section_AgendaItems';
   };
   attributes: {
     Agenda_Items: Schema.Attribute.Component<'page-sections.agenda-item', true>;
+    Title: Schema.Attribute.String & Schema.Attribute.DefaultTo<'Agenda'>;
+  };
+}
+
+export interface PageSectionsSectionFooter extends Struct.ComponentSchema {
+  collectionName: 'components_page_sections_section_footers';
+  info: {
+    displayName: 'Section_Footer';
+  };
+  attributes: {
+    ActionLinks: Schema.Attribute.Component<'global.footer-action-link', true>;
+    Disclaimer: Schema.Attribute.Blocks;
   };
 }
 
@@ -220,7 +229,7 @@ export interface PageSectionsSectionHero extends Struct.ComponentSchema {
 export interface PageSectionsSectionSpeakerGrid extends Struct.ComponentSchema {
   collectionName: 'components_page_sections_section_speaker_grids';
   info: {
-    displayName: 'Section_Speaker_Grid';
+    displayName: 'Section_SpeakerGrid';
   };
   attributes: {
     Bio_button: Schema.Attribute.String;
@@ -376,6 +385,7 @@ declare module '@strapi/strapi' {
       'page-sections.block-session-cards': PageSectionsBlockSessionCards;
       'page-sections.rich-text-content': PageSectionsRichTextContent;
       'page-sections.section-agenda-block': PageSectionsSectionAgendaBlock;
+      'page-sections.section-footer': PageSectionsSectionFooter;
       'page-sections.section-hero': PageSectionsSectionHero;
       'page-sections.section-speaker-grid': PageSectionsSectionSpeakerGrid;
       'shared.media': SharedMedia;

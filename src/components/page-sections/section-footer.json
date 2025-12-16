@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_page_sections_section_footers",
+  "info": {
+    "displayName": "Section_Footer"
+  },
+  "options": {},
+  "attributes": {
+    "Disclaimer": {
+      "type": "blocks"
+    },
+    "ActionLinks": {
+      "type": "component",
+      "component": "global.footer-action-link",
+      "repeatable": true
+    }
+  },
+  "config": {}
+}

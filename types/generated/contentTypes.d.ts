@@ -713,21 +713,6 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
-    Footer_Action_Links: Schema.Attribute.Component<
-      'global.footer-action-link',
-      true
-    > &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    Footer_Disclaimer_Text: Schema.Attribute.Blocks &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
     Landing_Page_Layout: Schema.Attribute.DynamicZone<
       [
         'page-sections.section-hero',
@@ -795,8 +780,16 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::webinar.webinar'
     >;
-    RequireRegistration: Schema.Attribute.Component<
-      'page-sections.block-registration-ui',
+    RequireRegistration: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.DefaultTo<true>;
+    Section_Footer: Schema.Attribute.Component<
+      'page-sections.section-footer',
       false
     > &
       Schema.Attribute.SetPluginOptions<{
@@ -850,7 +843,7 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
       }>;
     Zoom_Setup_Config: Schema.Attribute.Component<
       'webinar-details.zoom-event-setup',
-      true
+      false
     > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
