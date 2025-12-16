@@ -5,12 +5,8 @@
   },
   "options": {},
   "attributes": {
-    "Value": {
+    "Label": {
       "type": "string"
-    },
-    "Is_Required": {
-      "type": "boolean",
-      "default": true
     }
   },
   "config": {}

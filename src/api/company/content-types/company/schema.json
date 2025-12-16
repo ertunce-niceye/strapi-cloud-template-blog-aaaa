@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "companies",
+  "info": {
+    "singularName": "company",
+    "pluralName": "companies",
+    "displayName": "Company"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "CompanyName": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "CompanyUID": {
+      "type": "uid",
+      "targetField": "CompanyName",
+      "required": true
+    },
+    "AllowedTemplates": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::page-template.page-template",
+      "mappedBy": "Companies"
+    },
+    "Users": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "plugin::users-permissions.user",
+      "mappedBy": "Company"
+    },
+    "Webinars": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::webinar.webinar",
+      "mappedBy": "Company"
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "kind": "collectionType",
+  "collectionName": "page_templates",
+  "info": {
+    "singularName": "page-template",
+    "pluralName": "page-templates",
+    "displayName": "PageTemplate"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "TemplateName": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "TemplateUID": {
+      "type": "uid",
+      "required": true
+    },
+    "TemplatePreview": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files"
+      ]
+    },
+    "Companies": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::company.company",
+      "inversedBy": "AllowedTemplates"
+    }
+  }
+}

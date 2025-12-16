@@ -60,6 +60,14 @@
           "localized": true
         }
       }
+    },
+    "Approved": {
+      "type": "boolean",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     }
   }
 }

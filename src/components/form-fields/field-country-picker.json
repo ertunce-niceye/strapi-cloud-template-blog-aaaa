@@ -8,6 +8,9 @@
     "Label": {
       "type": "string"
     },
+    "Placeholder": {
+      "type": "string"
+    },
     "Is_Required": {
       "type": "boolean",
       "default": true

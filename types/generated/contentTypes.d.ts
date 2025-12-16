@@ -430,6 +430,80 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiCompanyCompany extends Struct.CollectionTypeSchema {
+  collectionName: 'companies';
+  info: {
+    displayName: 'Company';
+    pluralName: 'companies';
+    singularName: 'company';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    AllowedTemplates: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::page-template.page-template'
+    >;
+    CompanyName: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    CompanyUID: Schema.Attribute.UID<'CompanyName'> & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::company.company'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    Users: Schema.Attribute.Relation<
+      'oneToMany',
+      'plugin::users-permissions.user'
+    >;
+    Webinars: Schema.Attribute.Relation<'oneToMany', 'api::webinar.webinar'>;
+  };
+}
+
+export interface ApiPageTemplatePageTemplate
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'page_templates';
+  info: {
+    displayName: 'PageTemplate';
+    pluralName: 'page-templates';
+    singularName: 'page-template';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    Companies: Schema.Attribute.Relation<'manyToMany', 'api::company.company'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::page-template.page-template'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    TemplateName: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    TemplatePreview: Schema.Attribute.Media<'images' | 'files'>;
+    TemplateUID: Schema.Attribute.UID & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiPlatformSettingPlatformSetting
   extends Struct.SingleTypeSchema {
   collectionName: 'platform_settings';
@@ -494,6 +568,12 @@ export interface ApiRegistrationDataRegistrationData
     };
   };
   attributes: {
+    Approved: Schema.Attribute.Boolean &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -620,6 +700,7 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
     };
   };
   attributes: {
+    Company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -680,6 +761,10 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
+    PageTemplate: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::page-template.page-template'
+    >;
     publishedAt: Schema.Attribute.DateTime;
     Registration_Closed_Time: Schema.Attribute.DateTime &
       Schema.Attribute.Required &
@@ -690,7 +775,6 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
       }>;
     Registration_Definition: Schema.Attribute.DynamicZone<
       [
-        'form-fields.option-value',
         'form-fields.field-text-input',
         'form-fields.field-email-address',
         'form-fields.field-dropdown-select',
@@ -1224,10 +1308,10 @@ export interface PluginUsersPermissionsUser
   };
   options: {
     draftAndPublish: false;
-    timestamps: true;
   };
   attributes: {
     blocked: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    Company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
     confirmationToken: Schema.Attribute.String & Schema.Attribute.Private;
     confirmed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     createdAt: Schema.Attribute.DateTime;
@@ -1279,6 +1363,8 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::company.company': ApiCompanyCompany;
+      'api::page-template.page-template': ApiPageTemplatePageTemplate;
       'api::platform-setting.platform-setting': ApiPlatformSettingPlatformSetting;
       'api::registration-data.registration-data': ApiRegistrationDataRegistrationData;
       'api::speaker.speaker': ApiSpeakerSpeaker;

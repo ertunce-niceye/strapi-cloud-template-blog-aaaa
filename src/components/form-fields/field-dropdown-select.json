@@ -8,6 +8,9 @@
     "Label": {
       "type": "string"
     },
+    "Placeholder": {
+      "type": "string"
+    },
     "Options_List": {
       "type": "component",
       "component": "form-fields.option-value",

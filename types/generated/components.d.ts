@@ -33,6 +33,7 @@ export interface FormFieldsFieldCountryPicker extends Struct.ComponentSchema {
   attributes: {
     Is_Required: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     Label: Schema.Attribute.String;
+    Placeholder: Schema.Attribute.String;
   };
 }
 
@@ -45,6 +46,7 @@ export interface FormFieldsFieldDropdownSelect extends Struct.ComponentSchema {
     Is_Required: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     Label: Schema.Attribute.String;
     Options_List: Schema.Attribute.Component<'form-fields.option-value', true>;
+    Placeholder: Schema.Attribute.String;
   };
 }
 
@@ -78,8 +80,7 @@ export interface FormFieldsOptionValue extends Struct.ComponentSchema {
     displayName: 'Option_Value';
   };
   attributes: {
-    Is_Required: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
-    Value: Schema.Attribute.String;
+    Label: Schema.Attribute.String;
   };
 }
 

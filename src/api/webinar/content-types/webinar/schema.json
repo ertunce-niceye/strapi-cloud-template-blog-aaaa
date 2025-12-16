@@ -34,6 +34,17 @@
       "targetField": "Webinar_Title",
       "required": true
     },
+    "Company": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::company.company",
+      "inversedBy": "Webinars"
+    },
+    "PageTemplate": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::page-template.page-template"
+    },
     "Start_DateTime": {
       "type": "datetime",
       "pluginOptions": {
@@ -157,7 +168,6 @@
         }
       },
       "components": [
-        "form-fields.option-value",
         "form-fields.field-text-input",
         "form-fields.field-email-address",
         "form-fields.field-dropdown-select",
