@@ -733,8 +733,6 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         'page-sections.section-hero',
         'page-sections.section-agenda-block',
         'page-sections.section-speaker-grid',
-        'page-sections.block-registration-ui',
-        'page-sections.rich-text-content',
         'page-sections.block-session-cards',
       ]
     > &
@@ -797,6 +795,15 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::webinar.webinar'
     >;
+    RequireRegistration: Schema.Attribute.Component<
+      'page-sections.block-registration-ui',
+      false
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     Slug: Schema.Attribute.UID<'Webinar_Title'> &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{

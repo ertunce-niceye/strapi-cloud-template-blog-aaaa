@@ -98,8 +98,6 @@
         "page-sections.section-hero",
         "page-sections.section-agenda-block",
         "page-sections.section-speaker-grid",
-        "page-sections.block-registration-ui",
-        "page-sections.rich-text-content",
         "page-sections.block-session-cards"
       ]
     },
@@ -159,6 +157,16 @@
       },
       "component": "webinar-details.email-automation-settings",
       "repeatable": true
+    },
+    "RequireRegistration": {
+      "type": "component",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "component": "page-sections.block-registration-ui",
+      "repeatable": false
     },
     "Registration_Definition": {
       "type": "dynamiczone",
