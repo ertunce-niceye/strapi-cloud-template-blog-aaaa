@@ -749,6 +749,12 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
       'api::page-template.page-template'
     >;
     publishedAt: Schema.Attribute.DateTime;
+    Registration_Closed_Message: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     Registration_Closed_Time: Schema.Attribute.DateTime &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -765,6 +771,12 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         'form-fields.field-consent-checkbox',
       ]
     > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    Registration_Exist_Message: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
