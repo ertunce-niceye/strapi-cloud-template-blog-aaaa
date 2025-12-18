@@ -719,6 +719,7 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         'page-sections.section-agenda-block',
         'page-sections.section-speaker-grid',
         'page-sections.block-session-cards',
+        'page-sections.section-footer',
       ]
     > &
       Schema.Attribute.SetPluginOptions<{
@@ -800,15 +801,6 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         };
       }> &
       Schema.Attribute.DefaultTo<true>;
-    Section_Footer: Schema.Attribute.Component<
-      'page-sections.section-footer',
-      false
-    > &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
     Slug: Schema.Attribute.UID<'Webinar_Title'> &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{

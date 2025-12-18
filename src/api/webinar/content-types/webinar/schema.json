@@ -99,7 +99,8 @@
         "page-sections.section-hero",
         "page-sections.section-agenda-block",
         "page-sections.section-speaker-grid",
-        "page-sections.block-session-cards"
+        "page-sections.block-session-cards",
+        "page-sections.section-footer"
       ]
     },
     "webinar": {
@@ -223,16 +224,6 @@
           "localized": true
         }
       }
-    },
-    "Section_Footer": {
-      "type": "component",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "component": "page-sections.section-footer",
-      "repeatable": false
     },
     "Registration_Closed_Message": {
       "type": "string",
