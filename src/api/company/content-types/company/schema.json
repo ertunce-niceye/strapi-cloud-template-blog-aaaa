@@ -38,6 +38,14 @@
       "relation": "oneToMany",
       "target": "api::webinar.webinar",
       "mappedBy": "Company"
+    },
+    "CompanyLogo": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files"
+      ]
     }
   }
 }

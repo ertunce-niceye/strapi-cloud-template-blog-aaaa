@@ -14,7 +14,7 @@ export interface FormFieldsFieldConsentCheckbox extends Struct.ComponentSchema {
         'GDPR',
         'KVKK',
         'HIPAA',
-        'Others',
+        'Other',
       ]
     >;
     Consent_Text: Schema.Attribute.Blocks;
@@ -152,6 +152,9 @@ export interface PageSectionsAgendaItem extends Struct.ComponentSchema {
     displayName: 'Section_Agenda';
   };
   attributes: {
+    Session: Schema.Attribute.Enumeration<
+      ['Session 1', 'Session 2', 'Session 3', 'Session 4', 'Session 5']
+    >;
     Speaker_Relation: Schema.Attribute.Relation<
       'oneToMany',
       'api::speaker.speaker'

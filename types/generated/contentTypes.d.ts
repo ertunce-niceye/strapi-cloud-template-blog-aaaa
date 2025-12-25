@@ -445,6 +445,7 @@ export interface ApiCompanyCompany extends Struct.CollectionTypeSchema {
       'manyToMany',
       'api::page-template.page-template'
     >;
+    CompanyLogo: Schema.Attribute.Media<'images' | 'files'>;
     CompanyName: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Unique;
