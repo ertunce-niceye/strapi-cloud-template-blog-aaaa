@@ -714,6 +714,14 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
+    EventTimeZone: Schema.Attribute.Enumeration<
+      ['Europe/Istanbul', 'America/New_York', 'Europe/London', 'Europe/Paris']
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     Landing_Page_Layout: Schema.Attribute.DynamicZone<
       [
         'page-sections.section-hero',

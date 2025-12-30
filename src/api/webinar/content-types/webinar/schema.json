@@ -242,6 +242,20 @@
           ]
         }
       }
+    },
+    "EventTimeZone": {
+      "type": "enumeration",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "enum": [
+        "Europe/Istanbul",
+        "America/New_York",
+        "Europe/London",
+        "Europe/Paris"
+      ]
     }
   }
 }
