@@ -754,6 +754,14 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
+    OnDemandVideo: Schema.Attribute.DynamicZone<
+      ['ondemand-page.on-demand-video']
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     PageTemplate: Schema.Attribute.Relation<
       'oneToOne',
       'api::page-template.page-template'

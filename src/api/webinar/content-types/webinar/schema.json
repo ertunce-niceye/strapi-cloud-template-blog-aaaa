@@ -256,6 +256,17 @@
         "Europe/London",
         "Europe/Paris"
       ]
+    },
+    "OnDemandVideo": {
+      "type": "dynamiczone",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "components": [
+        "ondemand-page.on-demand-video"
+      ]
     }
   }
 }

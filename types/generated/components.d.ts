@@ -146,6 +146,28 @@ export interface LivePageLiveResourcesBlock extends Struct.ComponentSchema {
   };
 }
 
+export interface OndemandPageOnDemandVideo extends Struct.ComponentSchema {
+  collectionName: 'components_ondemand_page_on_demand_videos';
+  info: {
+    displayName: 'On_Demand_Video';
+  };
+  attributes: {
+    RecordingDate: Schema.Attribute.DateTime;
+    speakers: Schema.Attribute.Relation<'oneToMany', 'api::speaker.speaker'>;
+    VideoFile: Schema.Attribute.Media<'videos'>;
+  };
+}
+
+export interface OndemandPageTitle extends Struct.ComponentSchema {
+  collectionName: 'components_ondemand_page_titles';
+  info: {
+    displayName: 'Title';
+  };
+  attributes: {
+    Title: Schema.Attribute.String;
+  };
+}
+
 export interface PageSectionsAgendaItem extends Struct.ComponentSchema {
   collectionName: 'components_page_sections_agenda_items';
   info: {
@@ -310,11 +332,7 @@ export interface WebinarDetailsCustomActionButton
     displayName: 'Custom_Action_Button';
   };
   attributes: {
-    Button_Label: Schema.Attribute.String;
-    Button_Style: Schema.Attribute.Enumeration<
-      ['Primary', 'Secondary', 'Hidden']
-    >;
-    Link_URL: Schema.Attribute.String;
+    Document: Schema.Attribute.Media<'images' | 'files' | 'videos' | 'audios'>;
   };
 }
 
@@ -383,6 +401,8 @@ declare module '@strapi/strapi' {
       'live-page.live-cta-block': LivePageLiveCtaBlock;
       'live-page.live-q-a-panel': LivePageLiveQAPanel;
       'live-page.live-resources-block': LivePageLiveResourcesBlock;
+      'ondemand-page.on-demand-video': OndemandPageOnDemandVideo;
+      'ondemand-page.title': OndemandPageTitle;
       'page-sections.agenda-item': PageSectionsAgendaItem;
       'page-sections.block-registration-ui': PageSectionsBlockRegistrationUi;
       'page-sections.block-session-cards': PageSectionsBlockSessionCards;

@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_ondemand_page_on_demand_videos",
+  "info": {
+    "displayName": "On_Demand_Video"
+  },
+  "options": {},
+  "attributes": {
+    "RecordingDate": {
+      "type": "datetime"
+    },
+    "VideoFile": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "videos"
+      ]
+    },
+    "speakers": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::speaker.speaker"
+    }
+  },
+  "config": {}
+}

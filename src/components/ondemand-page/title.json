@@ -1,0 +1,13 @@
+{
+  "collectionName": "components_ondemand_page_titles",
+  "info": {
+    "displayName": "Title"
+  },
+  "options": {},
+  "attributes": {
+    "Title": {
+      "type": "string"
+    }
+  },
+  "config": {}
+}

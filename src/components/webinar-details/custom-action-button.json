@@ -5,18 +5,14 @@
   },
   "options": {},
   "attributes": {
-    "Button_Label": {
-      "type": "string"
-    },
-    "Link_URL": {
-      "type": "string"
-    },
-    "Button_Style": {
-      "type": "enumeration",
-      "enum": [
-        "Primary",
-        "Secondary",
-        "Hidden"
+    "Document": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
       ]
     }
   },
