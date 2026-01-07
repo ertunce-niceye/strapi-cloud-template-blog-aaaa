@@ -714,6 +714,18 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
+    EventStartDate: Schema.Attribute.Date &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    EventStartTime: Schema.Attribute.Time &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     EventTimeZone: Schema.Attribute.Enumeration<
       ['Europe/Istanbul', 'America/New_York', 'Europe/London', 'Europe/Paris']
     > &
@@ -801,6 +813,18 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         };
       }>;
     Registration_Success_Message: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    RegistrationCloseDate: Schema.Attribute.Date &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    RegistrationCloseTime: Schema.Attribute.Time &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
