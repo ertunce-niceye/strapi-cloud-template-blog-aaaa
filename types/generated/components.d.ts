@@ -155,6 +155,7 @@ export interface OndemandPageOnDemandVideo extends Struct.ComponentSchema {
     RecordingDate: Schema.Attribute.DateTime;
     speakers: Schema.Attribute.Relation<'oneToMany', 'api::speaker.speaker'>;
     VideoFile: Schema.Attribute.Media<'videos'>;
+    VideoTitle: Schema.Attribute.String;
   };
 }
 
