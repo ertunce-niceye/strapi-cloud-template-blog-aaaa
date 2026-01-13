@@ -714,6 +714,12 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
+    EventDuration: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     EventStartDate: Schema.Attribute.Date &
       Schema.Attribute.SetPluginOptions<{
         i18n: {

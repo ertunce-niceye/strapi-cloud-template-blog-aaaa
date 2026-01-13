@@ -299,6 +299,14 @@
           "localized": true
         }
       }
+    },
+    "EventDuration": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     }
   }
 }
