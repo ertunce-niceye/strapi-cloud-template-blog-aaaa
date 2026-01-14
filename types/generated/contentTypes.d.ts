@@ -471,6 +471,62 @@ export interface ApiCompanyCompany extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiOndemandVideoOndemandVideo
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'ondemand_videos';
+  info: {
+    displayName: 'OnDemand Video';
+    pluralName: 'ondemand-videos';
+    singularName: 'ondemand-video';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    DurationSeconds: Schema.Attribute.Integer;
+    locale: Schema.Attribute.String;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::ondemand-video.ondemand-video'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    RecordingDate: Schema.Attribute.DateTime &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    Slug: Schema.Attribute.UID<'VideoTitle'> &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    Speakers: Schema.Attribute.Relation<'manyToMany', 'api::speaker.speaker'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    VideoFile: Schema.Attribute.Media<'videos'> & Schema.Attribute.Required;
+    VideoTitle: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    webinar: Schema.Attribute.Relation<'manyToOne', 'api::webinar.webinar'>;
+  };
+}
+
 export interface ApiPageTemplatePageTemplate
   extends Struct.CollectionTypeSchema {
   collectionName: 'page_templates';
@@ -780,6 +836,10 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
+    OnDemandVideos: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::ondemand-video.ondemand-video'
+    >;
     PageTemplate: Schema.Attribute.Relation<
       'oneToOne',
       'api::page-template.page-template'
@@ -1415,6 +1475,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::company.company': ApiCompanyCompany;
+      'api::ondemand-video.ondemand-video': ApiOndemandVideoOndemandVideo;
       'api::page-template.page-template': ApiPageTemplatePageTemplate;
       'api::platform-setting.platform-setting': ApiPlatformSettingPlatformSetting;
       'api::registration-data.registration-data': ApiRegistrationDataRegistrationData;

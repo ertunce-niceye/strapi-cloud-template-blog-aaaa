@@ -22,6 +22,7 @@
           "localized": true
         }
       },
+      
       "required": true
     },
     "Slug": {
@@ -307,6 +308,12 @@
           "localized": true
         }
       }
+    },
+    "OnDemandVideos": {
+      "type": "relation",
+        "relation": "oneToMany",
+        "target": "api::ondemand-video.ondemand-video",
+        "mappedBy": "webinar"
     }
   }
 }

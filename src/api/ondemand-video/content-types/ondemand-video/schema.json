@@ -1,0 +1,60 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ondemand_videos",
+  "info": {
+    "singularName": "ondemand-video",
+    "pluralName": "ondemand-videos",
+    "displayName": "OnDemand Video"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "VideoTitle": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": {
+        "i18n": { "localized": true }
+      }
+    },
+    "Slug": {
+      "type": "uid",
+      "targetField": "VideoTitle",
+      "required": true,
+      "pluginOptions": {
+        "i18n": { "localized": true }
+      }
+    },
+    "RecordingDate": {
+      "type": "datetime",
+      "pluginOptions": {
+        "i18n": { "localized": true }
+      }
+    },
+    "VideoFile": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["videos"]
+    },
+    "DurationSeconds": {
+      "type": "integer"
+    },
+    "Speakers": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::speaker.speaker"
+    },
+    "webinar": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::webinar.webinar",
+      "inversedBy": "OnDemandVideos"
+    }
+  }
+}
