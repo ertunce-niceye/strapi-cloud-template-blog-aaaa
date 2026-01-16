@@ -22,7 +22,6 @@
           "localized": true
         }
       },
-      
       "required": true
     },
     "Slug": {
@@ -311,9 +310,16 @@
     },
     "OnDemandVideos": {
       "type": "relation",
-        "relation": "oneToMany",
-        "target": "api::ondemand-video.ondemand-video",
-        "mappedBy": "webinar"
+      "relation": "oneToMany",
+      "target": "api::ondemand-video.ondemand-video",
+      "mappedBy": "webinar"
+    },
+    "on_demand_video_logs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::on-demand-video-logs.on-demand-video-logs",
+      "private": true,
+      "mappedBy": "webinar"
     }
   }
 }

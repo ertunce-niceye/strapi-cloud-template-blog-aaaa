@@ -1,0 +1,62 @@
+{
+  "kind": "collectionType",
+  "collectionName": "on_demand_video_logss",
+  "info": {
+    "singularName": "on-demand-video-logs",
+    "pluralName": "on-demand-video-logss",
+    "displayName": "OnDemand Video Logs"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "on_demand_video": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::ondemand-video.ondemand-video",
+      "inversedBy": "on_demand_video_logs"
+    },
+    "webinar": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::webinar.webinar",
+      "inversedBy": "on_demand_video_logs"
+    },
+    "uniqueKey": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "identity": {
+      "type": "string",
+      "required": true
+    },
+    "sessionId": {
+      "type": "string",
+      "required": true
+    },
+    "playCount": {
+      "type": "integer",
+      "default": 0
+    },
+    "firstPlayAt": {
+      "type": "datetime"
+    },
+    "lastEventAt": {
+      "type": "datetime"
+    },
+    "lastPositionSeconds": {
+      "type": "integer",
+      "default": 0
+    },
+    "secondsWatched": {
+      "type": "integer",
+      "default": 0
+    },
+    "isCompleted": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

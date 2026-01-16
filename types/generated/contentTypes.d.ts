@@ -471,6 +471,51 @@ export interface ApiCompanyCompany extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiOnDemandVideoLogsOnDemandVideoLogs
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'on_demand_video_logss';
+  info: {
+    displayName: 'OnDemand Video Logs';
+    pluralName: 'on-demand-video-logss';
+    singularName: 'on-demand-video-logs';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    firstPlayAt: Schema.Attribute.DateTime;
+    identity: Schema.Attribute.String & Schema.Attribute.Required;
+    isCompleted: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    lastEventAt: Schema.Attribute.DateTime;
+    lastPositionSeconds: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<0>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::on-demand-video-logs.on-demand-video-logs'
+    > &
+      Schema.Attribute.Private;
+    on_demand_video: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::ondemand-video.ondemand-video'
+    >;
+    playCount: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    secondsWatched: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    sessionId: Schema.Attribute.String & Schema.Attribute.Required;
+    uniqueKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    webinar: Schema.Attribute.Relation<'manyToOne', 'api::webinar.webinar'>;
+  };
+}
+
 export interface ApiOndemandVideoOndemandVideo
   extends Struct.CollectionTypeSchema {
   collectionName: 'ondemand_videos';
@@ -497,6 +542,11 @@ export interface ApiOndemandVideoOndemandVideo
       'oneToMany',
       'api::ondemand-video.ondemand-video'
     >;
+    on_demand_video_logs: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::on-demand-video-logs.on-demand-video-logs'
+    > &
+      Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
     RecordingDate: Schema.Attribute.DateTime &
       Schema.Attribute.SetPluginOptions<{
@@ -822,6 +872,11 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         };
       }> &
       Schema.Attribute.DefaultTo<false>;
+    on_demand_video_logs: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::on-demand-video-logs.on-demand-video-logs'
+    > &
+      Schema.Attribute.Private;
     On_Demand_Video_URL: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1475,6 +1530,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::company.company': ApiCompanyCompany;
+      'api::on-demand-video-logs.on-demand-video-logs': ApiOnDemandVideoLogsOnDemandVideoLogs;
       'api::ondemand-video.ondemand-video': ApiOndemandVideoOndemandVideo;
       'api::page-template.page-template': ApiPageTemplatePageTemplate;
       'api::platform-setting.platform-setting': ApiPlatformSettingPlatformSetting;
