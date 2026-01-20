@@ -1,0 +1,14 @@
+{
+    "collectionName": "components_evaluation_survey_options",
+    "info": {
+        "displayName": "Survey Option",
+        "icon": "check"
+    },
+    "options": {},
+    "attributes": {
+        "Text": {
+            "type": "string",
+            "required": true
+        }
+    }
+}

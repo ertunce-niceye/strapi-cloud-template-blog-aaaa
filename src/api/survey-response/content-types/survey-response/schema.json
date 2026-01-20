@@ -1,0 +1,30 @@
+{
+    "kind": "collectionType",
+    "collectionName": "survey_responses",
+    "info": {
+        "singularName": "survey-response",
+        "pluralName": "survey-responses",
+        "displayName": "Survey Response",
+        "description": "Stores user feedback from webinar surveys"
+    },
+    "options": {
+        "draftAndPublish": false
+    },
+    "pluginOptions": {},
+    "attributes": {
+        "Email": {
+            "type": "email",
+            "required": true
+        },
+        "Answers": {
+            "type": "json",
+            "required": true
+        },
+        "Webinar": {
+            "type": "relation",
+            "relation": "manyToOne",
+            "target": "api::webinar.webinar",
+            "inversedBy": "Survey_Responses"
+        }
+    }
+}

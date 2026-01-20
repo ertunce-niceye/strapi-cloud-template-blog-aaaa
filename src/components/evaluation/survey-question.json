@@ -1,0 +1,31 @@
+{
+  "collectionName": "components_evaluation_survey_questions",
+  "info": {
+    "displayName": "Survey Question",
+    "icon": "question"
+  },
+  "options": {},
+  "attributes": {
+    "Question_Text": {
+      "type": "string",
+      "required": true
+    },
+    "Type": {
+      "type": "enumeration",
+      "required": true,
+      "default": "Single Choice",
+      "enum": [
+        "Single Choice",
+        "Multi Choice",
+        "Star Rating",
+        "Ordering",
+        "Text"
+      ]
+    },
+    "Question_Options": {
+      "type": "component",
+      "component": "evaluation.survey-option",
+      "repeatable": true
+    }
+  }
+}

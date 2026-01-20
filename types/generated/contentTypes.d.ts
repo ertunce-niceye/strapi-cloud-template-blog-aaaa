@@ -791,6 +791,38 @@ export interface ApiSpeakerSpeaker extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiSurveyResponseSurveyResponse
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'survey_responses';
+  info: {
+    description: 'Stores user feedback from webinar surveys';
+    displayName: 'Survey Response';
+    pluralName: 'survey-responses';
+    singularName: 'survey-response';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    Answers: Schema.Attribute.JSON & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    Email: Schema.Attribute.Email & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::survey-response.survey-response'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    Webinar: Schema.Attribute.Relation<'manyToOne', 'api::webinar.webinar'>;
+  };
+}
+
 export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
   collectionName: 'webinars';
   info: {
@@ -814,6 +846,15 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
     Email_Config: Schema.Attribute.Component<
       'webinar-details.email-automation-settings',
       true
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    Evaluation_Survey: Schema.Attribute.Component<
+      'evaluation.evaluation-survey',
+      false
     > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -984,6 +1025,10 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
+    Survey_Responses: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::survey-response.survey-response'
+    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1536,6 +1581,7 @@ declare module '@strapi/strapi' {
       'api::platform-setting.platform-setting': ApiPlatformSettingPlatformSetting;
       'api::registration-data.registration-data': ApiRegistrationDataRegistrationData;
       'api::speaker.speaker': ApiSpeakerSpeaker;
+      'api::survey-response.survey-response': ApiSurveyResponseSurveyResponse;
       'api::webinar.webinar': ApiWebinarWebinar;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

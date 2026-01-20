@@ -1,5 +1,54 @@
 import type { Schema, Struct } from '@strapi/strapi';
 
+export interface EvaluationEvaluationSurvey extends Struct.ComponentSchema {
+  collectionName: 'components_evaluation_evaluation_surveys';
+  info: {
+    displayName: 'Evaluation Survey';
+    icon: 'bulletList';
+  };
+  attributes: {
+    Description: Schema.Attribute.RichText;
+    External_Url: Schema.Attribute.String;
+    Questions: Schema.Attribute.Component<'evaluation.survey-question', true>;
+    Survey_Mode: Schema.Attribute.Enumeration<
+      ['External_Link', 'Native_Form']
+    > &
+      Schema.Attribute.DefaultTo<'External_Link'>;
+    Title: Schema.Attribute.String;
+  };
+}
+
+export interface EvaluationSurveyOption extends Struct.ComponentSchema {
+  collectionName: 'components_evaluation_survey_options';
+  info: {
+    displayName: 'Survey Option';
+    icon: 'check';
+  };
+  attributes: {
+    Text: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
+export interface EvaluationSurveyQuestion extends Struct.ComponentSchema {
+  collectionName: 'components_evaluation_survey_questions';
+  info: {
+    displayName: 'Survey Question';
+    icon: 'question';
+  };
+  attributes: {
+    Question_Options: Schema.Attribute.Component<
+      'evaluation.survey-option',
+      true
+    >;
+    Question_Text: Schema.Attribute.String & Schema.Attribute.Required;
+    Type: Schema.Attribute.Enumeration<
+      ['Single Choice', 'Multi Choice', 'Star Rating', 'Ordering', 'Text']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'Single Choice'>;
+  };
+}
+
 export interface FormFieldsFieldConsentCheckbox extends Struct.ComponentSchema {
   collectionName: 'components_form_fields_field_consent_checkboxes';
   info: {
@@ -391,6 +440,9 @@ export interface WebinarDetailsZoomEventSetup extends Struct.ComponentSchema {
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
+      'evaluation.evaluation-survey': EvaluationEvaluationSurvey;
+      'evaluation.survey-option': EvaluationSurveyOption;
+      'evaluation.survey-question': EvaluationSurveyQuestion;
       'form-fields.field-consent-checkbox': FormFieldsFieldConsentCheckbox;
       'form-fields.field-country-picker': FormFieldsFieldCountryPicker;
       'form-fields.field-dropdown-select': FormFieldsFieldDropdownSelect;

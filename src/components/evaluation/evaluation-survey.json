@@ -1,0 +1,32 @@
+{
+    "collectionName": "components_evaluation_evaluation_surveys",
+    "info": {
+        "displayName": "Evaluation Survey",
+        "icon": "bulletList"
+    },
+    "options": {},
+    "attributes": {
+        "Survey_Mode": {
+            "type": "enumeration",
+            "default": "External_Link",
+            "enum": [
+                "External_Link",
+                "Native_Form"
+            ]
+        },
+        "External_Url": {
+            "type": "string"
+        },
+        "Title": {
+            "type": "string"
+        },
+        "Description": {
+            "type": "richtext"
+        },
+        "Questions": {
+            "type": "component",
+            "component": "evaluation.survey-question",
+            "repeatable": true
+        }
+    }
+}

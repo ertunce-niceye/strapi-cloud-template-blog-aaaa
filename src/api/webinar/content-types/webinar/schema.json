@@ -320,6 +320,22 @@
       "target": "api::on-demand-video-logs.on-demand-video-logs",
       "private": true,
       "mappedBy": "webinar"
+    },
+    "Evaluation_Survey": {
+      "type": "component",
+      "repeatable": false,
+      "component": "evaluation.evaluation-survey",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "Survey_Responses": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::survey-response.survey-response",
+      "mappedBy": "Webinar"
     }
   }
 }
