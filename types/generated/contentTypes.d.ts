@@ -697,6 +697,13 @@ export interface ApiRegistrationDataRegistrationData
           localized: true;
         };
       }>;
+    Is_Moderator: Schema.Attribute.Boolean &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.DefaultTo<false>;
     Last_Access_At: Schema.Attribute.DateTime &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -862,18 +869,21 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         };
       }>;
     EventDuration: Schema.Attribute.String &
+      Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
         };
       }>;
     EventStartDate: Schema.Attribute.Date &
+      Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
         };
       }>;
     EventStartTime: Schema.Attribute.Time &
+      Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
@@ -882,11 +892,19 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
     EventTimeZone: Schema.Attribute.Enumeration<
       ['Europe/Istanbul', 'America/New_York', 'Europe/London', 'Europe/Paris']
     > &
+      Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
         };
       }>;
+    Is_Manually_Ended: Schema.Attribute.Boolean &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.DefaultTo<false>;
     Landing_Page_Layout: Schema.Attribute.DynamicZone<
       [
         'page-sections.section-hero',
@@ -906,6 +924,15 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::webinar.webinar'
     >;
+    Moderator_List: Schema.Attribute.Component<
+      'webinar-details.moderator-entry',
+      true
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     On_Demand_Available: Schema.Attribute.Boolean &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -948,7 +975,6 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         };
       }>;
     Registration_Closed_Time: Schema.Attribute.DateTime &
-      Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
@@ -981,12 +1007,14 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         };
       }>;
     RegistrationCloseDate: Schema.Attribute.Date &
+      Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
         };
       }>;
     RegistrationCloseTime: Schema.Attribute.Time &
+      Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
@@ -1013,12 +1041,18 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
       }>;
     Speakers: Schema.Attribute.Relation<'manyToMany', 'api::speaker.speaker'>;
     Start_DateTime: Schema.Attribute.DateTime &
-      Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
         };
       }>;
+    Survey_and_Certificate_Active: Schema.Attribute.Boolean &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.DefaultTo<false>;
     Survey_Post_Webinar_URL: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {

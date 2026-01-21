@@ -402,6 +402,18 @@ export interface WebinarDetailsEmailAutomationSettings
   };
 }
 
+export interface WebinarDetailsModeratorEntry extends Struct.ComponentSchema {
+  collectionName: 'components_webinar_details_moderator_entries';
+  info: {
+    description: 'Email allowed to moderate the webinar';
+    displayName: 'Moderator Entry';
+    icon: 'user-check';
+  };
+  attributes: {
+    Email: Schema.Attribute.Email & Schema.Attribute.Required;
+  };
+}
+
 export interface WebinarDetailsReminderEmail extends Struct.ComponentSchema {
   collectionName: 'components_webinar_details_reminder_emails';
   info: {
@@ -471,6 +483,7 @@ declare module '@strapi/strapi' {
       'shared.slider': SharedSlider;
       'webinar-details.custom-action-button': WebinarDetailsCustomActionButton;
       'webinar-details.email-automation-settings': WebinarDetailsEmailAutomationSettings;
+      'webinar-details.moderator-entry': WebinarDetailsModeratorEntry;
       'webinar-details.reminder-email': WebinarDetailsReminderEmail;
       'webinar-details.zoom-event-setup': WebinarDetailsZoomEventSetup;
     }

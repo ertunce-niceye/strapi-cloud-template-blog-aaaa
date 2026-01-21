@@ -52,7 +52,7 @@
           "localized": true
         }
       },
-      "required": true
+      "required": false
     },
     "Registration_Closed_Time": {
       "type": "datetime",
@@ -61,7 +61,7 @@
           "localized": true
         }
       },
-      "required": true
+      "required": false
     },
     "RequireRegistration": {
       "type": "boolean",
@@ -250,6 +250,7 @@
           "localized": true
         }
       },
+      "required": true,
       "enum": [
         "Europe/Istanbul",
         "America/New_York",
@@ -274,7 +275,8 @@
         "i18n": {
           "localized": true
         }
-      }
+      },
+      "required": true
     },
     "EventStartTime": {
       "type": "time",
@@ -282,7 +284,8 @@
         "i18n": {
           "localized": true
         }
-      }
+      },
+      "required": true
     },
     "RegistrationCloseDate": {
       "type": "date",
@@ -290,7 +293,8 @@
         "i18n": {
           "localized": true
         }
-      }
+      },
+      "required": true
     },
     "RegistrationCloseTime": {
       "type": "time",
@@ -298,7 +302,8 @@
         "i18n": {
           "localized": true
         }
-      }
+      },
+      "required": true
     },
     "EventDuration": {
       "type": "string",
@@ -306,7 +311,8 @@
         "i18n": {
           "localized": true
         }
-      }
+      },
+      "required": true
     },
     "OnDemandVideos": {
       "type": "relation",
@@ -323,8 +329,36 @@
     },
     "Evaluation_Survey": {
       "type": "component",
-      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
       "component": "evaluation.evaluation-survey",
+      "repeatable": false
+    },
+    "Moderator_List": {
+      "type": "component",
+      "repeatable": true,
+      "component": "webinar-details.moderator-entry",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "Survey_and_Certificate_Active": {
+      "type": "boolean",
+      "default": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "Is_Manually_Ended": {
+      "type": "boolean",
+      "default": false,
       "pluginOptions": {
         "i18n": {
           "localized": true

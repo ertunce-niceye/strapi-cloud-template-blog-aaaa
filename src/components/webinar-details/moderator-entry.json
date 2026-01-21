@@ -1,0 +1,15 @@
+{
+    "collectionName": "components_webinar_details_moderator_entries",
+    "info": {
+        "displayName": "Moderator Entry",
+        "icon": "user-check",
+        "description": "Email allowed to moderate the webinar"
+    },
+    "options": {},
+    "attributes": {
+        "Email": {
+            "type": "email",
+            "required": true
+        }
+    }
+}

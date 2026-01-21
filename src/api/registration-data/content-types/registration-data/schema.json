@@ -68,6 +68,15 @@
           "localized": true
         }
       }
+    },
+    "Is_Moderator": {
+      "type": "boolean",
+      "default": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     }
   }
 }

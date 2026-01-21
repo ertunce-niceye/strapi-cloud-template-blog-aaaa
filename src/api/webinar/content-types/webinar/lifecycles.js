@@ -137,6 +137,61 @@ function applyComputedRegistrationClosedTime(event) {
   );
 }
 
+
+function normalizeEmail(e) {
+  return String(e || "").trim().toLowerCase();
+}
+
+async function syncModerators(result, strapi) {
+  try {
+    // Strapi v5: requires documentId
+    if (!result || !result.documentId) return;
+
+    // 1. Fetch full webinar with Moderator List
+    const webinar = await strapi.documents('api::webinar.webinar').findOne({
+      documentId: result.documentId,
+      populate: ['Moderator_List']
+    });
+
+    if (!webinar) return;
+
+    const moderators = webinar.Moderator_List || [];
+    const modEmails = new Set(
+      moderators.map(m => normalizeEmail(m.Email)).filter(e => e.length > 0)
+    );
+
+    // 2. Fetch registrations linked to this webinar
+    const registrations = await strapi.documents('api::registration-data.registration-data').findMany({
+      filters: {
+        Webinar: {
+          documentId: result.documentId
+        }
+      }
+    });
+
+    // 3. Update status
+    for (const reg of registrations) {
+      if (!reg.Email_Address) continue;
+
+      const email = normalizeEmail(reg.Email_Address);
+      const shouldBeModerator = modEmails.has(email);
+      const currentStatus = Boolean(reg.Is_Moderator);
+
+      if (shouldBeModerator !== currentStatus) {
+        strapi.log.info(`[ModeratorSync] Updating ${email}: ${currentStatus} -> ${shouldBeModerator}`);
+
+        await strapi.documents('api::registration-data.registration-data').update({
+          documentId: reg.documentId,
+          data: { Is_Moderator: shouldBeModerator },
+          status: 'published'
+        });
+      }
+    }
+  } catch (err) {
+    strapi.log.error(`[ModeratorSync] Sync failed: ${err.message}`);
+  }
+}
+
 module.exports = {
   async beforeCreate(event) {
     strapi.log.info("🔥 [webinar] beforeCreate fired");
@@ -148,5 +203,9 @@ module.exports = {
     strapi.log.info("🔥 [webinar] beforeUpdate fired");
     applyComputedStartDateTime(event);
     applyComputedRegistrationClosedTime(event);
+  },
+
+  async afterUpdate(event) {
+    await syncModerators(event.result, strapi);
   },
 };
