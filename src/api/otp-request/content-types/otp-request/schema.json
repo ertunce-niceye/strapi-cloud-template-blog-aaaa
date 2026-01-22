@@ -1,0 +1,36 @@
+{
+    "kind": "collectionType",
+    "collectionName": "otp_requests",
+    "info": {
+        "singularName": "otp-request",
+        "pluralName": "otp-requests",
+        "displayName": "OTP Request",
+        "description": "Temporary OTP codes for moderator login"
+    },
+    "options": {
+        "draftAndPublish": false
+    },
+    "pluginOptions": {},
+    "attributes": {
+        "Email": {
+            "type": "email",
+            "required": true
+        },
+        "Code": {
+            "type": "string",
+            "required": true
+        },
+        "Slug": {
+            "type": "string",
+            "required": true
+        },
+        "ExpiresAt": {
+            "type": "datetime",
+            "required": true
+        },
+        "IsUsed": {
+            "type": "boolean",
+            "default": false
+        }
+    }
+}

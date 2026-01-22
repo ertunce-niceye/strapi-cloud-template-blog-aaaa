@@ -577,6 +577,39 @@ export interface ApiOndemandVideoOndemandVideo
   };
 }
 
+export interface ApiOtpRequestOtpRequest extends Struct.CollectionTypeSchema {
+  collectionName: 'otp_requests';
+  info: {
+    description: 'Temporary OTP codes for moderator login';
+    displayName: 'OTP Request';
+    pluralName: 'otp-requests';
+    singularName: 'otp-request';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    Code: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    Email: Schema.Attribute.Email & Schema.Attribute.Required;
+    ExpiresAt: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    IsUsed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::otp-request.otp-request'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    Slug: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiPageTemplatePageTemplate
   extends Struct.CollectionTypeSchema {
   collectionName: 'page_templates';
@@ -1611,6 +1644,7 @@ declare module '@strapi/strapi' {
       'api::company.company': ApiCompanyCompany;
       'api::on-demand-video-logs.on-demand-video-logs': ApiOnDemandVideoLogsOnDemandVideoLogs;
       'api::ondemand-video.ondemand-video': ApiOndemandVideoOndemandVideo;
+      'api::otp-request.otp-request': ApiOtpRequestOtpRequest;
       'api::page-template.page-template': ApiPageTemplatePageTemplate;
       'api::platform-setting.platform-setting': ApiPlatformSettingPlatformSetting;
       'api::registration-data.registration-data': ApiRegistrationDataRegistrationData;
