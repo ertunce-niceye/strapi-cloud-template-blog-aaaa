@@ -9,13 +9,11 @@ module.exports = {
                 return ctx.badRequest('Slug is required');
             }
 
-            // 1. Find Webinar by Slug to get ID and Creator info (optional check here, but mainly for ID)
+            // 1. Find Webinar by Slug to get ID
             const webinars = await strapi.entityService.findMany('api::webinar.webinar', {
                 filters: { Slug: slug },
                 populate: {
                     createdBy: true,
-                    // We might need to check creator here if we wanted strict check in Strapi, 
-                    // but we are delegating auth to Next.js for now.
                 },
             });
 
@@ -24,48 +22,49 @@ module.exports = {
             }
             const webinar = webinars[0];
 
-            // 2. Fetch Logs for this webinar
-            // We rely on 'webinar' relation in the log
-            // Also need to fetch the VIDEO metadata (Duration, Speakers) - ideally we fetch videos separately or populate deeply.
-            // Populating deeply in logs might be heavy if many logs.
-            // Better approach: Fetch all OnDemandVideos for this webinar first to get metadata map.
-
+            // 2. Fetch All Videos used in this Webinar to get Metadata (Duration, Speakers)
+            // We fetch this separately to build a metadata map.
             const videos = await strapi.entityService.findMany('api::ondemand-video.ondemand-video', {
-                filters: { webinar: webinar.id },
+                filters: { webinar: { id: webinar.id } },
                 populate: { Speakers: true }
             });
 
             // Map Video Metadata
+            let totalWebinarDuration = 0;
             const videoMeta = {};
             videos.forEach(v => {
+                const dur = v.DurationSeconds || 0;
+                totalWebinarDuration += dur;
                 videoMeta[v.id] = {
-                    duration: v.DurationSeconds || 0,
-                    speakers: (v.Speakers || []).map(s => s.Name_Surname).join(", "),
+                    duration: dur,
+                    // Fix: Use bracket notation to avoid IDE type warnings since 'Speakers' comes from populate
+                    speakers: (v['Speakers'] || []).map(s => s.Full_Name).join(", "),
                     title: v.VideoTitle
                 };
             });
 
+            // 3. Fetch Logs (This can be large, we might consider pagination if it grows too much)
             const logs = await strapi.entityService.findMany('api::on-demand-video-logs.on-demand-video-logs', {
                 filters: {
-                    webinar: webinar.id,
+                    webinar: { id: webinar.id },
                 },
                 populate: {
                     on_demand_video: {
-                        fields: ['id'], // Just get ID, we have meta
+                        fields: ['id'], // Just get ID, we have meta in videoMeta
                     },
                 },
                 limit: -1, // Fetch all logs for aggregation
             });
 
-            // 3. Aggregate Data
+            // 4. Aggregate Data
 
-            // Summary
+            // Summary Variables
             let totalSecondsWatched = 0;
             const uniqueViewers = new Set();
-            const videoStats = {}; // videoId -> { title, views, totalSeconds, uniqueUsers, completions, sumPct }
-            const userStats = {};  // identity -> { identity, totalSeconds, videos: Set() }
+            const videoStats = {}; // videoId -> { ...stats }
+            const userStats = {};  // identity -> { ...stats }
 
-            // Init videoStats from metadata (so we show videos even with 0 views)
+            // Initialize videoStats from metadata (ensure videos with 0 views appear)
             Object.keys(videoMeta).forEach(vId => {
                 videoStats[vId] = {
                     id: parseInt(vId),
@@ -80,6 +79,7 @@ module.exports = {
                 };
             });
 
+            // Process Logs
             logs.forEach(log => {
                 const seconds = log.secondsWatched || 0;
                 totalSecondsWatched += seconds;
@@ -87,7 +87,7 @@ module.exports = {
                 if (log.identity) {
                     uniqueViewers.add(log.identity);
 
-                    // User Stats
+                    // User Stats Aggregate
                     if (!userStats[log.identity]) {
                         userStats[log.identity] = {
                             identity: log.identity,
@@ -102,8 +102,9 @@ module.exports = {
                     }
                 }
 
-                // Video Stats
-                const vid = log.on_demand_video;
+                // Video Stats Aggregate
+                // Use bracket notation to avoid IDE warnings
+                const vid = log['on_demand_video'];
                 if (vid) {
                     const vId = vid.id;
                     if (videoStats[vId]) {
@@ -113,13 +114,6 @@ module.exports = {
                         if (log.identity) {
                             if (!videoStats[vId].uniqueUsers.has(log.identity)) {
                                 videoStats[vId].uniqueUsers.add(log.identity);
-
-                                // Calculate stats PER USER for completion/percentage
-                                // Note: 'log' is per-session usually? Or per user-video aggregate?
-                                // If logs are fragmented (multiple logs per user per video), we need to aggregate FIRST by user-video.
-                                // Assuming 'log' here is one entry per user per video (unique constraints? or multiple?)
-                                // If multiple, this logic is flawed. 
-                                // Let's assume log entries are per session. We need to aggregate user-video totals first to determine completion.
                             }
                             if (userStats[log.identity]) {
                                 userStats[log.identity].videosWatched.add(videoStats[vId].title);
@@ -129,18 +123,18 @@ module.exports = {
                 }
             });
 
-            // Refined Aggregation for Completion/Percentage
-            // We need to group logs by (VideoID + Identity) to get TOTAL watched by that user on that video
+            // Refined Aggregation for Completion/Percentage (Per User-Video Total)
+            // We need logs grouped by (VideoID + Identity) to see total time spent by one user on one video.
             const userVideoTotals = {}; // key: "vid_identity" -> totalSeconds
 
             logs.forEach(log => {
-                if (log.on_demand_video && log.identity) {
-                    const key = `${log.on_demand_video.id}_${log.identity}`;
+                if (log['on_demand_video'] && log.identity) {
+                    const key = `${log['on_demand_video'].id}_${log.identity}`;
                     userVideoTotals[key] = (userVideoTotals[key] || 0) + (log.secondsWatched || 0);
                 }
             });
 
-            // Now calculate completion & avg percentage based on userVideoTotals
+            // Calculate per-video completion and avg percentage
             Object.keys(userVideoTotals).forEach(key => {
                 const [vIdStr, identity] = key.split('_');
                 const vId = parseInt(vIdStr);
@@ -159,12 +153,31 @@ module.exports = {
                 }
             });
 
+            // Calculate Global Averages for Summary
+            const uniqueViewersCount = uniqueViewers.size;
+            let avgWatchTime = 0;
+            let avgPercentage = 0;
+
+            if (uniqueViewersCount > 0) {
+                // Avg Watch Time = Total Seconds Watched / Unique Users
+                avgWatchTime = totalSecondsWatched / uniqueViewersCount;
+
+                // Avg Percentage = (Avg Watch Time / Total Content Duration) * 100
+                if (totalWebinarDuration > 0) {
+                    avgPercentage = (avgWatchTime / totalWebinarDuration) * 100;
+                }
+            }
+
             // Format Output
             const summaryData = {
                 webinarTitle: webinar.Webinar_Title,
-                totalUniqueViewers: uniqueViewers.size,
+                totalUniqueViewers: uniqueViewersCount,
                 totalSecondsWatched,
-                totalLogEntries: logs.length
+                totalLogEntries: logs.length,
+                // New Global Metrics
+                totalVideoDuration: totalWebinarDuration,
+                avgWatchTime: Math.round(avgWatchTime),
+                avgPercentage: Math.round(avgPercentage)
             };
 
             const videosList = Object.values(videoStats).map(v => ({
