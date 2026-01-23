@@ -65,6 +65,12 @@
       "relation": "manyToMany",
       "target": "api::webinar.webinar",
       "inversedBy": "Speakers"
+    },
+    "Company": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::company.company",
+      "inversedBy": "Speakers"
     }
   }
 }

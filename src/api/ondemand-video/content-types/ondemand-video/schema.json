@@ -64,6 +64,12 @@
       "target": "api::webinar.webinar",
       "inversedBy": "OnDemandVideos"
     },
+    "Company": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::company.company",
+      "inversedBy": "OnDemandVideos"
+    },
     "on_demand_video_logs": {
       "type": "relation",
       "relation": "oneToMany",

@@ -46,6 +46,24 @@
         "images",
         "files"
       ]
+    },
+    "Speakers": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::speaker.speaker",
+      "mappedBy": "Company"
+    },
+    "OnDemandVideos": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::ondemand-video.ondemand-video",
+      "mappedBy": "Company"
+    },
+    "AdminUsers": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "admin::user",
+      "mappedBy": "company"
     }
   }
 }

@@ -388,6 +388,7 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
     blocked: Schema.Attribute.Boolean &
       Schema.Attribute.Private &
       Schema.Attribute.DefaultTo<false>;
+    company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -441,6 +442,7 @@ export interface ApiCompanyCompany extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    AdminUsers: Schema.Attribute.Relation<'oneToMany', 'admin::user'>;
     AllowedTemplates: Schema.Attribute.Relation<
       'manyToMany',
       'api::page-template.page-template'
@@ -459,7 +461,12 @@ export interface ApiCompanyCompany extends Struct.CollectionTypeSchema {
       'api::company.company'
     > &
       Schema.Attribute.Private;
+    OnDemandVideos: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::ondemand-video.ondemand-video'
+    >;
     publishedAt: Schema.Attribute.DateTime;
+    Speakers: Schema.Attribute.Relation<'oneToMany', 'api::speaker.speaker'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -533,6 +540,7 @@ export interface ApiOndemandVideoOndemandVideo
     };
   };
   attributes: {
+    Company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -796,6 +804,7 @@ export interface ApiSpeakerSpeaker extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
+    Company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1390,6 +1399,7 @@ export interface PluginUploadFile extends Struct.CollectionTypeSchema {
   attributes: {
     alternativeText: Schema.Attribute.String;
     caption: Schema.Attribute.String;
+    company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1447,6 +1457,7 @@ export interface PluginUploadFolder extends Struct.CollectionTypeSchema {
   };
   attributes: {
     children: Schema.Attribute.Relation<'oneToMany', 'plugin::upload.folder'>;
+    company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
