@@ -144,8 +144,13 @@ function normalizeEmail(e) {
 
 async function syncModerators(result, strapi) {
   try {
+    strapi.log.info(`[ModeratorSync] Starting sync for documentId: ${result?.documentId}`);
+
     // Strapi v5: requires documentId
-    if (!result || !result.documentId) return;
+    if (!result || !result.documentId) {
+      strapi.log.warn("[ModeratorSync] No documentId found in result");
+      return;
+    }
 
     // 1. Fetch full webinar with Moderator List
     const webinar = await strapi.documents('api::webinar.webinar').findOne({
@@ -153,12 +158,17 @@ async function syncModerators(result, strapi) {
       populate: ['Moderator_List']
     });
 
-    if (!webinar) return;
+    if (!webinar) {
+      strapi.log.warn(`[ModeratorSync] Webinar not found for documentId: ${result.documentId}`);
+      return;
+    }
 
     const moderators = webinar.Moderator_List || [];
     const modEmails = new Set(
       moderators.map(m => normalizeEmail(m.Email)).filter(e => e.length > 0)
     );
+
+    strapi.log.info(`[ModeratorSync] Found ${modEmails.size} moderators.`);
 
     // 2. Fetch registrations linked to this webinar
     const registrations = await strapi.documents('api::registration-data.registration-data').findMany({
@@ -168,6 +178,8 @@ async function syncModerators(result, strapi) {
         }
       }
     });
+
+    strapi.log.info(`[ModeratorSync] checking ${registrations.length} registrations`);
 
     // 3. Update status
     for (const reg of registrations) {
@@ -189,23 +201,80 @@ async function syncModerators(result, strapi) {
     }
   } catch (err) {
     strapi.log.error(`[ModeratorSync] Sync failed: ${err.message}`);
+    strapi.log.error(err.stack); // Print stack trace
+  }
+}
+
+// Safe implementation: Updates the record AFTER creation
+async function addCreatorToModerators(result, strapi) {
+  try {
+    if (!result || !result.documentId) return;
+
+    // In Strapi v5, createdBy might not be populated in result by default
+    const webinar = await strapi.documents('api::webinar.webinar').findOne({
+      documentId: result.documentId,
+      populate: ['Moderator_List', 'createdBy']
+    });
+
+    if (!webinar || !webinar.createdBy) return;
+
+    const adminUser = webinar.createdBy;
+    if (!adminUser.email) return;
+
+    const email = normalizeEmail(adminUser.email);
+    const moderators = webinar.Moderator_List || [];
+
+    // Check if already in list
+    const exists = moderators.some(m => m && normalizeEmail(m.Email) === email);
+
+    if (!exists) {
+      strapi.log.info(`[webinar] Auto-adding creator ${email} to Moderator_List (afterCreate)`);
+
+      const newList = [...moderators, { Email: email }];
+
+      await strapi.documents('api::webinar.webinar').update({
+        documentId: webinar.documentId,
+        data: {
+          Moderator_List: newList
+        },
+        status: 'draft' // Maintain draft status if it was just created as draft
+      });
+    }
+  } catch (err) {
+    strapi.log.error(`[webinar] Failed to auto-add creator (afterCreate): ${err.message}`);
   }
 }
 
 module.exports = {
   async beforeCreate(event) {
-    strapi.log.info("🔥 [webinar] beforeCreate fired");
-    applyComputedStartDateTime(event);
-    applyComputedRegistrationClosedTime(event);
+    try {
+      strapi.log.info("🔥 [webinar] beforeCreate fired");
+      applyComputedStartDateTime(event);
+      applyComputedRegistrationClosedTime(event);
+    } catch (err) {
+      strapi.log.error(`[webinar] beforeCreate failed: ${err.message}`);
+      strapi.log.error(err.stack);
+    }
+  },
+
+  async afterCreate(event) {
+    // Run this logic after creation is successful
+    await addCreatorToModerators(event.result, strapi);
   },
 
   async beforeUpdate(event) {
-    strapi.log.info("🔥 [webinar] beforeUpdate fired");
-    applyComputedStartDateTime(event);
-    applyComputedRegistrationClosedTime(event);
+    try {
+      strapi.log.info("🔥 [webinar] beforeUpdate fired");
+      applyComputedStartDateTime(event);
+      applyComputedRegistrationClosedTime(event);
+    } catch (err) {
+      strapi.log.error(`[webinar] beforeUpdate failed: ${err.message}`);
+      strapi.log.error(err.stack);
+    }
   },
 
   async afterUpdate(event) {
+    // syncModerators already has its own try/catch
     await syncModerators(event.result, strapi);
   },
 };
