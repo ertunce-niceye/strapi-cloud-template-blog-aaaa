@@ -21,6 +21,11 @@
             "targetField": "Name",
             "required": true
         },
+        "AssignedUsers": {
+            "type": "integer",
+            "default": 0,
+            "required": false
+        },
         "Company": {
             "type": "relation",
             "relation": "manyToOne",

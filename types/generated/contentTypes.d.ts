@@ -883,6 +883,7 @@ export interface ApiTeamTeam extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    AssignedUsers: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     Company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
