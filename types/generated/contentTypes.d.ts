@@ -388,7 +388,6 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
     blocked: Schema.Attribute.Boolean &
       Schema.Attribute.Private &
       Schema.Attribute.DefaultTo<false>;
-    company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -424,6 +423,8 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
     resetPasswordToken: Schema.Attribute.String & Schema.Attribute.Private;
     roles: Schema.Attribute.Relation<'manyToMany', 'admin::role'> &
       Schema.Attribute.Private;
+    team: Schema.Attribute.Relation<'manyToOne', 'api::team.team'> &
+      Schema.Attribute.Configurable;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -442,7 +443,6 @@ export interface ApiCompanyCompany extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    AdminUsers: Schema.Attribute.Relation<'oneToMany', 'admin::user'>;
     AllowedTemplates: Schema.Attribute.Relation<
       'manyToMany',
       'api::page-template.page-template'
@@ -467,13 +467,10 @@ export interface ApiCompanyCompany extends Struct.CollectionTypeSchema {
     >;
     publishedAt: Schema.Attribute.DateTime;
     Speakers: Schema.Attribute.Relation<'oneToMany', 'api::speaker.speaker'>;
+    Teams: Schema.Attribute.Relation<'oneToMany', 'api::team.team'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    Users: Schema.Attribute.Relation<
-      'oneToMany',
-      'plugin::users-permissions.user'
-    >;
     Webinars: Schema.Attribute.Relation<'oneToMany', 'api::webinar.webinar'>;
   };
 }
@@ -570,6 +567,7 @@ export interface ApiOndemandVideoOndemandVideo
         };
       }>;
     Speakers: Schema.Attribute.Relation<'manyToMany', 'api::speaker.speaker'>;
+    Team: Schema.Attribute.Relation<'manyToOne', 'api::team.team'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -827,6 +825,7 @@ export interface ApiSpeakerSpeaker extends Struct.CollectionTypeSchema {
         };
       }>;
     publishedAt: Schema.Attribute.DateTime;
+    Team: Schema.Attribute.Relation<'manyToOne', 'api::team.team'>;
     Title: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -869,6 +868,46 @@ export interface ApiSurveyResponseSurveyResponse
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     Webinar: Schema.Attribute.Relation<'manyToOne', 'api::webinar.webinar'>;
+  };
+}
+
+export interface ApiTeamTeam extends Struct.CollectionTypeSchema {
+  collectionName: 'teams';
+  info: {
+    description: 'Teams for content ownership and isolation';
+    displayName: 'Team';
+    pluralName: 'teams';
+    singularName: 'team';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    Company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::team.team'> &
+      Schema.Attribute.Private;
+    MediaFiles: Schema.Attribute.Relation<'oneToMany', 'plugin::upload.file'>;
+    MediaFolders: Schema.Attribute.Relation<
+      'oneToMany',
+      'plugin::upload.folder'
+    >;
+    Name: Schema.Attribute.String & Schema.Attribute.Required;
+    OnDemandVideos: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::ondemand-video.ondemand-video'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    Slug: Schema.Attribute.UID<'Name'> & Schema.Attribute.Required;
+    Speakers: Schema.Attribute.Relation<'oneToMany', 'api::speaker.speaker'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    Users: Schema.Attribute.Relation<'oneToMany', 'admin::user'>;
+    Webinars: Schema.Attribute.Relation<'oneToMany', 'api::webinar.webinar'>;
   };
 }
 
@@ -1105,6 +1144,7 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::survey-response.survey-response'
     >;
+    Team: Schema.Attribute.Relation<'manyToOne', 'api::team.team'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1429,6 +1469,7 @@ export interface PluginUploadFile extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime;
     related: Schema.Attribute.Relation<'morphToMany'>;
     size: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    team: Schema.Attribute.Relation<'manyToOne', 'api::team.team'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1457,7 +1498,6 @@ export interface PluginUploadFolder extends Struct.CollectionTypeSchema {
   };
   attributes: {
     children: Schema.Attribute.Relation<'oneToMany', 'plugin::upload.folder'>;
-    company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1483,6 +1523,7 @@ export interface PluginUploadFolder extends Struct.CollectionTypeSchema {
       Schema.Attribute.Required &
       Schema.Attribute.Unique;
     publishedAt: Schema.Attribute.DateTime;
+    team: Schema.Attribute.Relation<'manyToOne', 'api::team.team'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1600,7 +1641,6 @@ export interface PluginUsersPermissionsUser
   };
   attributes: {
     blocked: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
-    Company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
     confirmationToken: Schema.Attribute.String & Schema.Attribute.Private;
     confirmed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     createdAt: Schema.Attribute.DateTime;
@@ -1661,6 +1701,7 @@ declare module '@strapi/strapi' {
       'api::registration-data.registration-data': ApiRegistrationDataRegistrationData;
       'api::speaker.speaker': ApiSpeakerSpeaker;
       'api::survey-response.survey-response': ApiSurveyResponseSurveyResponse;
+      'api::team.team': ApiTeamTeam;
       'api::webinar.webinar': ApiWebinarWebinar;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

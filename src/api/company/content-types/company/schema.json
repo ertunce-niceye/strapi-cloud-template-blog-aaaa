@@ -27,12 +27,6 @@
       "target": "api::page-template.page-template",
       "mappedBy": "Companies"
     },
-    "Users": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "plugin::users-permissions.user",
-      "mappedBy": "Company"
-    },
     "Webinars": {
       "type": "relation",
       "relation": "oneToMany",
@@ -59,11 +53,11 @@
       "target": "api::ondemand-video.ondemand-video",
       "mappedBy": "Company"
     },
-    "AdminUsers": {
+    "Teams": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "admin::user",
-      "mappedBy": "company"
+      "target": "api::team.team",
+      "mappedBy": "Company"
     }
   }
 }

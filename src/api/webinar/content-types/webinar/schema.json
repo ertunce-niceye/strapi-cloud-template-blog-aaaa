@@ -40,6 +40,12 @@
       "target": "api::company.company",
       "inversedBy": "Webinars"
     },
+    "Team": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::team.team",
+      "inversedBy": "Webinars"
+    },
     "PageTemplate": {
       "type": "relation",
       "relation": "oneToOne",

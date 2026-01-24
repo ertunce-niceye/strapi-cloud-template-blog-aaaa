@@ -70,6 +70,12 @@
       "target": "api::company.company",
       "inversedBy": "OnDemandVideos"
     },
+    "Team": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::team.team",
+      "inversedBy": "OnDemandVideos"
+    },
     "on_demand_video_logs": {
       "type": "relation",
       "relation": "oneToMany",

@@ -1,0 +1,67 @@
+{
+    "kind": "collectionType",
+    "collectionName": "teams",
+    "info": {
+        "singularName": "team",
+        "pluralName": "teams",
+        "displayName": "Team",
+        "description": "Teams for content ownership and isolation"
+    },
+    "options": {
+        "draftAndPublish": false
+    },
+    "pluginOptions": {},
+    "attributes": {
+        "Name": {
+            "type": "string",
+            "required": true
+        },
+        "Slug": {
+            "type": "uid",
+            "targetField": "Name",
+            "required": true
+        },
+        "Company": {
+            "type": "relation",
+            "relation": "manyToOne",
+            "target": "api::company.company",
+            "inversedBy": "Teams"
+        },
+        "Users": {
+            "type": "relation",
+            "relation": "oneToMany",
+            "target": "admin::user",
+            "mappedBy": "Team"
+        },
+        "Webinars": {
+            "type": "relation",
+            "relation": "oneToMany",
+            "target": "api::webinar.webinar",
+            "mappedBy": "Team"
+        },
+        "Speakers": {
+            "type": "relation",
+            "relation": "oneToMany",
+            "target": "api::speaker.speaker",
+            "mappedBy": "Team"
+        },
+        "OnDemandVideos": {
+            "type": "relation",
+            "relation": "oneToMany",
+            "target": "api::ondemand-video.ondemand-video",
+            "mappedBy": "Team"
+        },
+        "MediaFolders": {
+            "type": "relation",
+            "relation": "oneToMany",
+            "target": "plugin::upload.folder",
+            "mappedBy": "Team"
+        },
+        "MediaFiles": {
+            "type": "relation",
+            "relation": "oneToMany",
+            "target": "plugin::upload.file",
+            "mappedBy": "Team"
+        }
+    }
+}

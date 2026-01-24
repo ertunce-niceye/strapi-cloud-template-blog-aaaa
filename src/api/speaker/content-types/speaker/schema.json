@@ -71,6 +71,12 @@
       "relation": "manyToOne",
       "target": "api::company.company",
       "inversedBy": "Speakers"
+    },
+    "Team": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::team.team",
+      "inversedBy": "Speakers"
     }
   }
 }
