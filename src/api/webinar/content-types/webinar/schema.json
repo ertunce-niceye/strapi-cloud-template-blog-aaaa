@@ -46,11 +46,6 @@
       "target": "api::team.team",
       "inversedBy": "Webinars"
     },
-    "PageTemplate": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::page-template.page-template"
-    },
     "Start_DateTime": {
       "type": "datetime",
       "pluginOptions": {
@@ -223,14 +218,6 @@
         "live-page.live-cta-block"
       ]
     },
-    "Survey_Post_Webinar_URL": {
-      "type": "string",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      }
-    },
     "Registration_Closed_Message": {
       "type": "string",
       "pluginOptions": {
@@ -262,17 +249,6 @@
         "America/New_York",
         "Europe/London",
         "Europe/Paris"
-      ]
-    },
-    "OnDemandVideo": {
-      "type": "dynamiczone",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "components": [
-        "ondemand-page.on-demand-video"
       ]
     },
     "EventStartDate": {
@@ -353,7 +329,16 @@
         }
       }
     },
-    "Survey_and_Certificate_Active": {
+    "Certificate_Active": {
+      "type": "boolean",
+      "default": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "Survey_Active": {
       "type": "boolean",
       "default": false,
       "pluginOptions": {

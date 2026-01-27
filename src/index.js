@@ -101,10 +101,14 @@ module.exports = {
       // Target /files, /folders (GET) specifically
       return route.path === '/files' || route.path === '/folders' || route.path === '/';
     });
+
+    // Register custom field for template configurator
+    // We are only registering it in the frontend (src/admin/app.js) to override the input component.
+    // Backend registration is skipped to avoid "plugin not found" errors, as we rely on 'json' type in schema.
   },
 
   bootstrap({ strapi }) {
-    console.log("✅ [src/index.js] bootstrap çalıştı");
+    strapi.log.info('bootstrap çalıştı');
 
     strapi.db.lifecycles.subscribe({
       // Hook into all isolated models

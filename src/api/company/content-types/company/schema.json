@@ -58,6 +58,12 @@
       "relation": "oneToMany",
       "target": "api::team.team",
       "mappedBy": "Company"
+    },
+    "PortalAdmins": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::portal-admin.portal-admin",
+      "mappedBy": "Company"
     }
   }
 }

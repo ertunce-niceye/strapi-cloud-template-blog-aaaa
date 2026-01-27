@@ -6,6 +6,9 @@
 
 module.exports = (config, { strapi }) => {
     return async (ctx, next) => {
+        // DISABLED BY USER REQUEST
+        return next();
+
         // 1. Check if user is logged in via admin panel
         if (!ctx.state.user) {
             return next();
@@ -46,11 +49,22 @@ module.exports = (config, { strapi }) => {
         if (url.startsWith("/upload")) {
             console.log(`[Team Isolation] Media Library Request: ${method} ${url}`);
 
+            // SKIP POST requests entirely - they are file uploads and should not be filtered
+            if (method === "POST") {
+                console.log(`[Team Isolation] Skipping POST upload request`);
+                return next();
+            }
+
+            // Only apply filters to GET requests for listing
             if (url.includes("/files") || url.includes("/folders")) {
                 if (method === "GET") {
                     if (!ctx.query.filters) ctx.query.filters = {};
-                    ctx.query.filters.team = { [filterKey]: { $eq: filterValue } };
-                    console.log(`[Team Isolation] Applied Media Filter: filters.team.${filterKey}=${filterValue}`);
+                    // Allow seeing files if they belong to Team OR if created by the user
+                    ctx.query.filters.$or = [
+                        { team: { [filterKey]: { $eq: filterValue } } },
+                        { createdBy: { id: { $eq: ctx.state.user.id } } }
+                    ];
+                    console.log(`[Team Isolation] Applied Media Filter: Team=${filterValue} OR Owner=${ctx.state.user.id}`);
                 }
             }
             return next();

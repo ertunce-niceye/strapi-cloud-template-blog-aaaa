@@ -1,0 +1,55 @@
+{
+    "kind": "collectionType",
+    "collectionName": "portal_admins",
+    "info": {
+        "singularName": "portal-admin",
+        "pluralName": "portal-admins",
+        "displayName": "Portal Admins",
+        "description": "External administrators (Customers) who manage webinars via the dashboard"
+    },
+    "options": {
+        "draftAndPublish": false
+    },
+    "pluginOptions": {},
+    "attributes": {
+        "Email": {
+            "type": "email",
+            "required": true,
+            "unique": true
+        },
+        "Password": {
+            "type": "password",
+            "required": true,
+            "private": true
+        },
+        "FirstName": {
+            "type": "string"
+        },
+        "LastName": {
+            "type": "string"
+        },
+        "PhoneNumber": {
+            "type": "string"
+        },
+        "OTP_Secret": {
+            "type": "string",
+            "private": true
+        },
+        "OTP_Enabled": {
+            "type": "boolean",
+            "default": false
+        },
+        "Team": {
+            "type": "relation",
+            "relation": "manyToOne",
+            "target": "api::team.team",
+            "inversedBy": "PortalAdmins"
+        },
+        "Company": {
+            "type": "relation",
+            "relation": "manyToOne",
+            "target": "api::company.company",
+            "inversedBy": "PortalAdmins"
+        }
+    }
+}

@@ -9,24 +9,24 @@ module.exports = (plugin) => {
         if (!Array.isArray(routes)) return;
 
         routes.forEach((route) => {
-            // Target /upload/files (and maybe /upload itself if used strictly for files)
-            // The main listing is GET /files
-            // The upload is POST /
-            // Need to check exact paths used by Media Library.
-            // Usually GET /files, POST /, DELETE /files/:id
+            // ONLY apply middleware to GET /files (listing)
+            // DO NOT apply to POST / (upload) - this was causing the upload failures
+            // The upload should be allowed, then the file will be associated with Team/Company
+            // when it's linked to a Speaker/Webinar entity
 
-            // Let's target broadly but carefully
-            if (route.path === '/files' || route.path === '/') {
-                // Note: Upload plugin routes are usually prefixed by /upload in strict config but here paths are relative
-                // Strapi prefixes them. 
-                // GET /files is standard for listing.
-
+            if (route.method === 'GET' && route.path === '/files') {
                 if (!route.config) route.config = {};
                 if (!route.config.middlewares) route.config.middlewares = [];
 
                 if (!route.config.middlewares.includes(middlewareName)) {
                     route.config.middlewares.push(middlewareName);
+                    console.log("✅ [Upload Extension] Applied company-isolation to GET /files");
                 }
+            }
+
+            // Explicitly log that we're skipping POST /
+            if (route.method === 'POST' && route.path === '/') {
+                console.log("✅ [Upload Extension] Skipping middleware for POST / (upload endpoint)");
             }
         });
     };

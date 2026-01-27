@@ -1,3 +1,5 @@
+
+
 export default {
     config: {
         // Extend the admin panel configuration

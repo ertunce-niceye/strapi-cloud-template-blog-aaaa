@@ -20,6 +20,34 @@
       "type": "uid",
       "required": true
     },
+    "Description": {
+      "type": "text"
+    },
+    "IsGlobal": {
+      "type": "boolean",
+      "default": false,
+      "required": true
+    },
+    "StyleVariant": {
+      "type": "enumeration",
+      "enum": [
+        "default",
+        "modern",
+        "classic",
+        "minimal",
+        "corporate"
+      ],
+      "default": "default",
+      "required": true
+    },
+    "ColorPalette": {
+      "type": "json",
+      "required": false
+    },
+    "LayoutConfig": {
+      "type": "json",
+      "required": false
+    },
     "TemplatePreview": {
       "type": "media",
       "multiple": false,

@@ -199,10 +199,40 @@ module.exports = {
                 videosCallback: Array.from(u.videosWatched)
             })).sort((a, b) => b.totalSeconds - a.totalSeconds);
 
+            // Build Detailed User-Video Watch List
+            const userVideoWatchesList = [];
+            Object.keys(userVideoTotals).forEach(key => {
+                const [vIdStr, identity] = key.split('_');
+                const vId = parseInt(vIdStr);
+                const userTotal = userVideoTotals[key];
+
+                if (videoStats[vId]) {
+                    const duration = videoStats[vId].duration;
+                    const watchedPercent = duration > 0 ? Math.min(100, (userTotal / duration) * 100) : 0;
+                    const completed = watchedPercent >= 90;
+
+                    userVideoWatchesList.push({
+                        user: identity,
+                        videoTitle: videoStats[vId].title,
+                        totalWatchTime: userTotal,
+                        watchedPercent: Math.round(watchedPercent * 10) / 10, // 1 decimal
+                        completed: completed
+                    });
+                }
+            });
+
+            // Sort by user, then by video title
+            userVideoWatchesList.sort((a, b) => {
+                if (a.user < b.user) return -1;
+                if (a.user > b.user) return 1;
+                return a.videoTitle.localeCompare(b.videoTitle);
+            });
+
             return {
                 summary: summaryData,
                 videos: videosList,
-                users: usersList
+                users: usersList,
+                userVideoWatches: userVideoWatchesList
             };
 
         } catch (err) {

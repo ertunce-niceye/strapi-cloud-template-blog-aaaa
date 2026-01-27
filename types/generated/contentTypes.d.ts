@@ -465,6 +465,10 @@ export interface ApiCompanyCompany extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::ondemand-video.ondemand-video'
     >;
+    PortalAdmins: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::portal-admin.portal-admin'
+    >;
     publishedAt: Schema.Attribute.DateTime;
     Speakers: Schema.Attribute.Relation<'oneToMany', 'api::speaker.speaker'>;
     Teams: Schema.Attribute.Relation<'oneToMany', 'api::team.team'>;
@@ -628,10 +632,16 @@ export interface ApiPageTemplatePageTemplate
     draftAndPublish: true;
   };
   attributes: {
+    ColorPalette: Schema.Attribute.JSON;
     Companies: Schema.Attribute.Relation<'manyToMany', 'api::company.company'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    Description: Schema.Attribute.Text;
+    IsGlobal: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    LayoutConfig: Schema.Attribute.JSON;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -639,6 +649,11 @@ export interface ApiPageTemplatePageTemplate
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
+    StyleVariant: Schema.Attribute.Enumeration<
+      ['default', 'modern', 'classic', 'minimal', 'corporate']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'default'>;
     TemplateName: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Unique;
@@ -691,6 +706,47 @@ export interface ApiPlatformSettingPlatformSetting
         };
       }>;
     publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPortalAdminPortalAdmin extends Struct.CollectionTypeSchema {
+  collectionName: 'portal_admins';
+  info: {
+    description: 'External administrators (Customers) who manage webinars via the dashboard';
+    displayName: 'Portal Admins';
+    pluralName: 'portal-admins';
+    singularName: 'portal-admin';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    Company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    Email: Schema.Attribute.Email &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    FirstName: Schema.Attribute.String;
+    LastName: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::portal-admin.portal-admin'
+    > &
+      Schema.Attribute.Private;
+    OTP_Enabled: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    OTP_Secret: Schema.Attribute.String & Schema.Attribute.Private;
+    Password: Schema.Attribute.Password &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private;
+    PhoneNumber: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    Team: Schema.Attribute.Relation<'manyToOne', 'api::team.team'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -901,6 +957,10 @@ export interface ApiTeamTeam extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::ondemand-video.ondemand-video'
     >;
+    PortalAdmins: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::portal-admin.portal-admin'
+    >;
     publishedAt: Schema.Attribute.DateTime;
     Slug: Schema.Attribute.UID<'Name'> & Schema.Attribute.Required;
     Speakers: Schema.Attribute.Relation<'oneToMany', 'api::speaker.speaker'>;
@@ -928,6 +988,13 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
     };
   };
   attributes: {
+    Certificate_Active: Schema.Attribute.Boolean &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.DefaultTo<false>;
     Company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1033,21 +1100,9 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
-    OnDemandVideo: Schema.Attribute.DynamicZone<
-      ['ondemand-page.on-demand-video']
-    > &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
     OnDemandVideos: Schema.Attribute.Relation<
       'oneToMany',
       'api::ondemand-video.ondemand-video'
-    >;
-    PageTemplate: Schema.Attribute.Relation<
-      'oneToOne',
-      'api::page-template.page-template'
     >;
     publishedAt: Schema.Attribute.DateTime;
     Registration_Closed_Message: Schema.Attribute.String &
@@ -1128,19 +1183,13 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
-    Survey_and_Certificate_Active: Schema.Attribute.Boolean &
+    Survey_Active: Schema.Attribute.Boolean &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
         };
       }> &
       Schema.Attribute.DefaultTo<false>;
-    Survey_Post_Webinar_URL: Schema.Attribute.String &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
     Survey_Responses: Schema.Attribute.Relation<
       'oneToMany',
       'api::survey-response.survey-response'
@@ -1699,6 +1748,7 @@ declare module '@strapi/strapi' {
       'api::otp-request.otp-request': ApiOtpRequestOtpRequest;
       'api::page-template.page-template': ApiPageTemplatePageTemplate;
       'api::platform-setting.platform-setting': ApiPlatformSettingPlatformSetting;
+      'api::portal-admin.portal-admin': ApiPortalAdminPortalAdmin;
       'api::registration-data.registration-data': ApiRegistrationDataRegistrationData;
       'api::speaker.speaker': ApiSpeakerSpeaker;
       'api::survey-response.survey-response': ApiSurveyResponseSurveyResponse;

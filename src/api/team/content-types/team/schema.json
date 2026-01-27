@@ -67,6 +67,12 @@
             "relation": "oneToMany",
             "target": "plugin::upload.file",
             "mappedBy": "Team"
+        },
+        "PortalAdmins": {
+            "type": "relation",
+            "relation": "oneToMany",
+            "target": "api::portal-admin.portal-admin",
+            "mappedBy": "Team"
         }
     }
 }
