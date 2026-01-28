@@ -82,6 +82,7 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
         try {
             const speakers = await strapi.documents('api::speaker.speaker').findMany({
                 publicationState: 'preview',
+                filters: { Team: user.Team.id },
                 populate: '*'
             });
             return speakers;
@@ -313,6 +314,7 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
         try {
             const videos = await strapi.documents('api::ondemand-video.ondemand-video').findMany({
                 publicationState: 'preview',
+                filters: { Team: user.Team.id },
                 populate: '*'
             });
             return videos;

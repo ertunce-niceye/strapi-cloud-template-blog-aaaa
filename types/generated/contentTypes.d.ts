@@ -1218,6 +1218,12 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
+    Wizard_Progress: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     Zoom_Setup_Config: Schema.Attribute.Component<
       'webinar-details.zoom-event-setup',
       false
