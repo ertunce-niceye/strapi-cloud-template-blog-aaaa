@@ -134,8 +134,8 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             throw new ApplicationError('No Team assigned');
         }
 
-        const { Full_Name, Title, Affiliation, Photo, Bio } = ctx.request.body;
-        console.log('[PortalAdmin] Payload:', { Full_Name, Title, Affiliation, Photo });
+        const { Full_Name, Email, Title, Affiliation, Photo, Bio } = ctx.request.body;
+        console.log('[PortalAdmin] Payload:', { Full_Name, Email, Title, Affiliation, Photo });
 
         // Construct Bio Blocks if Bio string provided
         let BioBlocks = null;
@@ -154,6 +154,7 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             const newSpeaker = await strapi.documents('api::speaker.speaker').create({
                 data: {
                     Full_Name: Full_Name,
+                    Email: Email,
                     Title: Title,
                     Affiliation: Affiliation,
                     Photo: Photo,

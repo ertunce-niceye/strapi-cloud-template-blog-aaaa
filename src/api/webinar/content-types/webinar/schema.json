@@ -321,40 +321,40 @@
     },
     "Moderator_List": {
       "type": "component",
-      "repeatable": true,
-      "component": "webinar-details.moderator-entry",
       "pluginOptions": {
         "i18n": {
           "localized": true
         }
-      }
+      },
+      "component": "webinar-details.moderator-entry",
+      "repeatable": true
     },
     "Certificate_Active": {
       "type": "boolean",
-      "default": false,
       "pluginOptions": {
         "i18n": {
           "localized": true
         }
-      }
+      },
+      "default": false
     },
     "Survey_Active": {
       "type": "boolean",
-      "default": false,
       "pluginOptions": {
         "i18n": {
           "localized": true
         }
-      }
+      },
+      "default": false
     },
     "Is_Manually_Ended": {
       "type": "boolean",
-      "default": false,
       "pluginOptions": {
         "i18n": {
           "localized": true
         }
-      }
+      },
+      "default": false
     },
     "Survey_Responses": {
       "type": "relation",
@@ -364,6 +364,39 @@
     },
     "Wizard_Progress": {
       "type": "json",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "EventType": {
+      "type": "enumeration",
+      "required": true,
+      "default": "Webinar",
+      "enum": [
+        "Webinar",
+        "Meeting"
+      ]
+    },
+    "AutoUnpublish_DateTime": {
+      "type": "datetime",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "AutoUnpublish_Date": {
+      "type": "date",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "AutoUnpublish_Time": {
+      "type": "time",
       "pluginOptions": {
         "i18n": {
           "localized": true
