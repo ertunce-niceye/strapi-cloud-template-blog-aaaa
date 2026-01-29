@@ -14,6 +14,7 @@ module.exports = {
         { method: 'POST', path: '/portal-admins/speakers/create', handler: 'portal-admin.createSpeaker', config: { auth: false } },
         { method: 'GET', path: '/portal-admins/ondemand-videos', handler: 'portal-admin.myOnDemandVideos', config: { auth: false } },
         { method: 'POST', path: '/portal-admins/ondemand-videos/create', handler: 'portal-admin.createOnDemandVideo', config: { auth: false } },
+        { method: 'GET', path: '/portal-admins/media-library', handler: 'portal-admin.getMediaLibrary', config: { auth: false } },
         { method: 'POST', path: '/portal-admins/upload', handler: 'portal-admin.upload', config: { auth: false } }
     ],
 };

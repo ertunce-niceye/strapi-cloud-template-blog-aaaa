@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use strict';
 
 /**
@@ -355,6 +356,54 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
         } catch (err) {
             console.error('[PortalAdmin] CreateOnDemandVideo DB Error:', err);
             throw new ApplicationError('Database create failed: ' + err.message);
+        }
+    },
+
+    async getMediaLibrary(ctx) {
+        const user = await this.verifyAuth(ctx);
+        if (!user) return ctx.unauthorized();
+
+        const { folder } = ctx.request.query;
+        // Parse folder: null string or 'null' should be actual null
+        const folderId = (folder && folder !== 'null' && folder !== 'undefined') ? folder : null;
+
+        try {
+            // 1. Fetch Folders
+            // plugin::upload.folder
+            const folders = await strapi.db.query('plugin::upload.folder').findMany({
+                where: {
+                    parent: folderId ? folderId : null
+                },
+                orderBy: { name: 'asc' }
+            });
+
+            // 2. Fetch Files
+            // plugin::upload.file
+            const files = await strapi.db.query('plugin::upload.file').findMany({
+                where: {
+                    folder: folderId ? folderId : null,
+                    // Optional: Filter by mime type if needed, but UI does it for now
+                },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            // 3. Get Current Folder Info (for breadcrumbs)
+            let currentFolder = null;
+            if (folderId) {
+                currentFolder = await strapi.db.query('plugin::upload.folder').findOne({
+                    where: { id: folderId },
+                    populate: ['parent']
+                });
+            }
+
+            return {
+                folders,
+                files,
+                currentFolder
+            };
+        } catch (err) {
+            console.error('[PortalAdmin] Media Library Error:', err);
+            throw new ApplicationError('Failed to fetch media library');
         }
     }
 }));
