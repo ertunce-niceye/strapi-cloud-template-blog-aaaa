@@ -114,7 +114,9 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
                 'Watching_Page_Layout',
                 'OnDemandVideos',
                 'Email_Config',
-                'Zoom_Setup_Config'
+                'Zoom_Setup_Config',
+                'Company',
+                'Company.CompanyLogo'
             ],
             status: 'draft'
         });

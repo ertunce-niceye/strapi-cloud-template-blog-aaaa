@@ -337,6 +337,14 @@
       },
       "default": false
     },
+    "Certificate_Config": {
+      "type": "json",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
     "Survey_Active": {
       "type": "boolean",
       "pluginOptions": {
