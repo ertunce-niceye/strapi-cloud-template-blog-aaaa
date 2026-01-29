@@ -1227,11 +1227,7 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     Watching_Page_Layout: Schema.Attribute.DynamicZone<
-      [
-        'live-page.live-resources-block',
-        'live-page.live-q-a-panel',
-        'live-page.live-cta-block',
-      ]
+      ['live-page.live-resources-block', 'live-page.live-cta-block']
     > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {

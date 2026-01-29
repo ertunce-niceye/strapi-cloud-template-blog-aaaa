@@ -214,7 +214,6 @@
       },
       "components": [
         "live-page.live-resources-block",
-        "live-page.live-q-a-panel",
         "live-page.live-cta-block"
       ]
     },
