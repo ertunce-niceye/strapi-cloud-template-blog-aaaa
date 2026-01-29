@@ -995,6 +995,13 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
     };
   };
   attributes: {
+    AutoRetire_Enabled: Schema.Attribute.Boolean &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.DefaultTo<false>;
     AutoUnpublish_Date: Schema.Attribute.Date &
       Schema.Attribute.SetPluginOptions<{
         i18n: {

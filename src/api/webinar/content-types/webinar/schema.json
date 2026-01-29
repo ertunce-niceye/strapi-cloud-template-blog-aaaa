@@ -409,6 +409,15 @@
           "localized": true
         }
       }
+    },
+    "AutoRetire_Enabled": {
+      "type": "boolean",
+      "default": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     }
   }
 }
