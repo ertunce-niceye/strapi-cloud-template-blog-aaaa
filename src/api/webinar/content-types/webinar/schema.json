@@ -358,6 +358,24 @@
       },
       "default": false
     },
+    "Survey_Available": {
+      "type": "boolean",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "default": false
+    },
+    "Certificate_Available": {
+      "type": "boolean",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "default": false
+    },
     "Is_Manually_Ended": {
       "type": "boolean",
       "pluginOptions": {

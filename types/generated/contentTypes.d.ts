@@ -1027,6 +1027,13 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         };
       }> &
       Schema.Attribute.DefaultTo<false>;
+    Certificate_Available: Schema.Attribute.Boolean &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.DefaultTo<false>;
     Certificate_Config: Schema.Attribute.JSON &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1227,6 +1234,13 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         };
       }>;
     Survey_Active: Schema.Attribute.Boolean &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.DefaultTo<false>;
+    Survey_Available: Schema.Attribute.Boolean &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
