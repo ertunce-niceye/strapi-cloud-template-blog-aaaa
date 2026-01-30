@@ -1046,6 +1046,18 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     DryRun_Available: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
+    DryRun_Context: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    DryRun_Date: Schema.Attribute.DateTime &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     Email_Config: Schema.Attribute.Component<
       'webinar-details.email-automation-settings',
       true

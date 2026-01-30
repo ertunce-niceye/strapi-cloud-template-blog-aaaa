@@ -28,6 +28,22 @@
       "type": "boolean",
       "default": false
     },
+    "DryRun_Date": {
+      "type": "datetime",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "DryRun_Context": {
+      "type": "json",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
     "Slug": {
       "type": "uid",
       "pluginOptions": {

@@ -261,7 +261,8 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
         const updated = await strapi.documents('api::webinar.webinar').update({
             documentId: documentId,
             data: data,
-            status: 'draft'
+            status: 'draft',
+            populate: ['Speakers', 'Moderator_List', 'Zoom_Setup_Config']
         });
 
         // Restore publishedAt info if exists
