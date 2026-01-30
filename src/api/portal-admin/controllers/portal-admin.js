@@ -71,9 +71,29 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             filters: { Team: user.Team.id },
             sort: { createdAt: 'desc' },
             populate: ['Team'],
-            publicationState: 'preview'
+            status: 'draft' // Explicitly fetch drafts to edit
         });
-        return webinars;
+
+        // Enrich with published status
+        const enriched = await Promise.all(webinars.map(async (w) => {
+            try {
+                const pub = await strapi.documents('api::webinar.webinar').findOne({
+                    documentId: w.documentId,
+                    fields: ['publishedAt', 'updatedAt'],
+                    status: 'published'
+                });
+                if (pub) {
+                    w.publishedAt = pub.publishedAt;
+                    // Check Modified
+                    if (new Date(w.updatedAt).getTime() > new Date(pub.updatedAt).getTime()) {
+                        w.isModified = true;
+                    }
+                }
+            } catch (e) { }
+            return w;
+        }));
+
+        return enriched;
     },
 
     async mySpeakers(ctx) {
@@ -124,6 +144,29 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
 
         if (!webinar || !webinar.Team || webinar.Team.id !== user.Team.id) {
             return ctx.forbidden('Access denied');
+        }
+
+        // Check for Published version to sync status
+        try {
+            const published = await strapi.documents('api::webinar.webinar').findOne({
+                documentId: documentId,
+                fields: ['publishedAt', 'updatedAt'],
+                status: 'published'
+            });
+            if (published) {
+                webinar.publishedAt = published.publishedAt; // Sync published status
+
+                // Check if Modified (Draft is newer than Published)
+                const draftTime = new Date(webinar.updatedAt).getTime();
+                const pubTime = new Date(published.updatedAt).getTime();
+
+                // Allow a small buffer (e.g. 1s) or just strict check
+                if (draftTime > pubTime) {
+                    webinar.isModified = true;
+                }
+            }
+        } catch (e) {
+            // Ignore if error looking up published
         }
 
         return webinar;
@@ -182,6 +225,8 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
 
         const payload = {
             ...data,
+            Certificate_Active: false, // Force default false
+            Survey_Active: false,      // Force default false
             Team: user.Team.id,
             Company: user.Company ? user.Company.id : null,
         };
@@ -219,6 +264,23 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             status: 'draft'
         });
 
+        // Restore publishedAt info if exists
+        try {
+            const published = await strapi.documents('api::webinar.webinar').findOne({
+                documentId: documentId,
+                fields: ['publishedAt', 'updatedAt'],
+                status: 'published'
+            });
+            if (published) {
+                updated.publishedAt = published.publishedAt;
+                // Since we just updated the draft, it IS modified relative to published (conceptually)
+                // or we check timestamp:
+                updated.isModified = true;
+            }
+        } catch (e) {
+            // ignore
+        }
+
         return { data: updated };
     },
 
@@ -244,7 +306,8 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             const published = await strapi.documents('api::webinar.webinar').publish({
                 documentId: documentId
             });
-            return { data: published };
+            // When just published, it is not modified
+            return { data: { ...published, isModified: false } };
         } catch (err) {
             console.error('[PortalAdmin] Publish Error:', err);
             throw new ApplicationError('Publish failed: ' + err.message);
@@ -273,7 +336,8 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             const unpublished = await strapi.documents('api::webinar.webinar').unpublish({
                 documentId: documentId
             });
-            return { data: unpublished };
+            // When unpublished, it's just a draft (publishedAt is null in 'unpublished')
+            return { data: { ...unpublished, publishedAt: null, isModified: false } };
         } catch (err) {
             console.error('[PortalAdmin] Unpublish Error:', err);
             throw new ApplicationError('Unpublish failed: ' + err.message);

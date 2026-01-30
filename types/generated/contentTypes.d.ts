@@ -995,6 +995,12 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
     };
   };
   attributes: {
+    AutoRetire_Date: Schema.Attribute.Date &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     AutoRetire_Enabled: Schema.Attribute.Boolean &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1002,19 +1008,13 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         };
       }> &
       Schema.Attribute.DefaultTo<false>;
-    AutoUnpublish_Date: Schema.Attribute.Date &
+    AutoRetire_Time: Schema.Attribute.Time &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
         };
       }>;
     AutoUnpublish_DateTime: Schema.Attribute.DateTime &
-      Schema.Attribute.SetPluginOptions<{
-        i18n: {
-          localized: true;
-        };
-      }>;
-    AutoUnpublish_Time: Schema.Attribute.Time &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
@@ -1037,6 +1037,8 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    DryRun_Available: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     Email_Config: Schema.Attribute.Component<
       'webinar-details.email-automation-settings',
       true

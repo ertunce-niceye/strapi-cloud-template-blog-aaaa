@@ -24,6 +24,10 @@
       },
       "required": true
     },
+    "DryRun_Available": {
+      "type": "boolean",
+      "default": false
+    },
     "Slug": {
       "type": "uid",
       "pluginOptions": {
@@ -394,7 +398,7 @@
         }
       }
     },
-    "AutoUnpublish_Date": {
+    "AutoRetire_Date": {
       "type": "date",
       "pluginOptions": {
         "i18n": {
@@ -402,7 +406,7 @@
         }
       }
     },
-    "AutoUnpublish_Time": {
+    "AutoRetire_Time": {
       "type": "time",
       "pluginOptions": {
         "i18n": {
@@ -412,12 +416,12 @@
     },
     "AutoRetire_Enabled": {
       "type": "boolean",
-      "default": false,
       "pluginOptions": {
         "i18n": {
           "localized": true
         }
-      }
+      },
+      "default": false
     }
   }
 }
