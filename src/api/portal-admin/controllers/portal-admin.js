@@ -423,6 +423,41 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
         }
     },
 
+    async updateOnDemandVideo(ctx) {
+        const user = await this.verifyAuth(ctx);
+        if (!user || !user.Team) throw new ApplicationError('No Team assigned');
+
+        const { documentId } = ctx.params;
+        const { VideoTitle, Slug, RecordingDate, DurationSeconds, VideoFile, Speakers } = ctx.request.body;
+
+        try {
+            // Verify ownership
+            const existing = await strapi.documents('api::ondemand-video.ondemand-video').findOne({
+                documentId: documentId,
+                filters: { Team: user.Team.id }
+            });
+
+            if (!existing) return ctx.notFound();
+
+            const updatedVideo = await strapi.documents('api::ondemand-video.ondemand-video').update({
+                documentId: documentId,
+                data: {
+                    VideoTitle: VideoTitle,
+                    Slug: Slug,
+                    RecordingDate: RecordingDate || null,
+                    DurationSeconds: DurationSeconds || null,
+                    VideoFile: VideoFile,
+                    Speakers: Speakers
+                },
+                status: 'published'
+            });
+            return updatedVideo;
+        } catch (err) {
+            console.error('[PortalAdmin] UpdateOnDemandVideo Error:', err);
+            throw new ApplicationError('Update failed: ' + err.message);
+        }
+    },
+
     async getMediaLibrary(ctx) {
         const user = await this.verifyAuth(ctx);
         if (!user) return ctx.unauthorized();
