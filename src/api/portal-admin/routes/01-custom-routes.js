@@ -1,10 +1,13 @@
 'use strict';
+console.log('Loading 01-custom-routes.js');
 
 module.exports = {
     routes: [
         { method: 'POST', path: '/portal-admins/login', handler: 'portal-admin.login', config: { auth: false } },
         { method: 'GET', path: '/portal-admins/me', handler: 'portal-admin.me', config: { auth: false } },
-        { method: 'GET', path: '/portal-admins/webinars', handler: 'portal-admin.myWebinars', config: { auth: false } },
+        { method: 'PUT', path: '/portal-admins/settings', handler: 'portal-admin.updateSettings', config: { auth: false } },
+        { method: 'GET', path: '/portal-admins/dashboard-stats', handler: 'portal-admin.dashboardStats', config: { auth: false } },
+        { method: 'GET', path: '/portal-admins/my-webinars', handler: 'portal-admin.myWebinars', config: { auth: false } },
         { method: 'GET', path: '/portal-admins/webinar/:documentId', handler: 'portal-admin.getWebinar', config: { auth: false } },
         { method: 'POST', path: '/portal-admins/webinar/create', handler: 'portal-admin.createWebinar', config: { auth: false } },
         { method: 'PUT', path: '/portal-admins/webinar/:documentId', handler: 'portal-admin.updateWebinar', config: { auth: false } },

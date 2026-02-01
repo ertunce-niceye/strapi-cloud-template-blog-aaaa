@@ -39,6 +39,9 @@
             "type": "boolean",
             "default": false
         },
+        "viewSettings": {
+            "type": "json"
+        },
         "Team": {
             "type": "relation",
             "relation": "manyToOne",

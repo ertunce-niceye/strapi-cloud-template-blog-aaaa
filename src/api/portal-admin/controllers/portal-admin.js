@@ -14,15 +14,22 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
     // Helper for safe auth
     async verifyAuth(ctx) {
         const authHeader = ctx.request.header.authorization || ctx.request.get('Authorization');
-        if (!authHeader) return null;
+        if (!authHeader) {
+            console.log('[PortalAdmin] Auth: No header');
+            return null;
+        }
         const token = authHeader.replace('Bearer ', '');
         try {
             const payload = await strapi.plugin('users-permissions').service('jwt').verify(token);
-            if (payload.type !== 'portal-admin') return null;
+            if (payload.type !== 'portal-admin') {
+                console.log('[PortalAdmin] Auth: Invalid payload type', payload.type);
+                return null;
+            }
 
             const user = await strapi.entityService.findOne('api::portal-admin.portal-admin', payload.id, {
                 populate: ['Team', 'Company']
             });
+            if (!user) console.log('[PortalAdmin] Auth: User not found for ID', payload.id);
             return user;
         } catch (e) {
             console.error('Auth verification failed:', e.message);
@@ -63,37 +70,224 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
         return await this.sanitizeOutput(user, ctx);
     },
 
-    async myWebinars(ctx) {
+    async updateSettings(ctx) {
         const user = await this.verifyAuth(ctx);
-        if (!user || !user.Team) return [];
+        if (!user) return ctx.unauthorized('Invalid token');
 
-        const webinars = await strapi.documents('api::webinar.webinar').findMany({
-            filters: { Team: user.Team.id },
-            sort: { createdAt: 'desc' },
-            populate: ['Team'],
-            status: 'draft' // Explicitly fetch drafts to edit
+        const { viewSettings } = ctx.request.body;
+        if (!viewSettings) return ctx.badRequest('viewSettings is required');
+
+        const updatedUser = await strapi.documents('api::portal-admin.portal-admin').update({
+            documentId: user.documentId,
+            data: { viewSettings }
         });
 
-        // Enrich with published status
-        const enriched = await Promise.all(webinars.map(async (w) => {
-            try {
-                const pub = await strapi.documents('api::webinar.webinar').findOne({
-                    documentId: w.documentId,
-                    fields: ['publishedAt', 'updatedAt'],
-                    status: 'published'
-                });
-                if (pub) {
-                    w.publishedAt = pub.publishedAt;
-                    // Check Modified
-                    if (new Date(w.updatedAt).getTime() > new Date(pub.updatedAt).getTime()) {
-                        w.isModified = true;
+        return await this.sanitizeOutput(updatedUser, ctx);
+    },
+
+    async dashboardStats(ctx) {
+        const user = await this.verifyAuth(ctx);
+        if (!user || !user.Team) return { error: 'No Team' };
+
+        const teamId = user.Team.id;
+
+        const getStats = async (days) => {
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+            const isoDate = startDate.toISOString();
+
+            // 1. Pending Approvals (Current, not really time-bound by creation but usually recent)
+            // But user asked for "Pending Approvals" generally. Let's return total pending regardless of time for now, or filter?
+            // User request: "Pending Approvals" (no date specified in list), others have (in last X days).
+            // Let's assume Global Pending for the widget, but since we return per period, let's filter by createdAt to match the "Activity in last X days" theme.
+            // Actually, "Pending Approvals" typically implies "Current Work", regardless of when they applied. 
+            // However, to fit the "Last 30 days" widget, maybe it means applications in last 30 days that are pending.
+            // I'll stick to creation date filter for consistency.
+
+            // REGISTRATIONS & PENDING
+            // Note: Registration_Data has 'Webinar', Webinar has 'Team'.
+            const registrations = await strapi.db.query('api::registration-data.registration-data').findMany({
+                where: {
+                    Webinar: { Team: teamId },
+                    createdAt: { $gte: isoDate },
+                    Is_Moderator: false
+                },
+                select: ['id', 'Approved', 'createdAt']
+            });
+
+            const countRegistrations = registrations.length;
+            const countPending = registrations.filter(r => !r.Approved).length;
+
+            // ATTENDEES (Placeholder: 0)
+            const countAttendees = 0;
+            const pctAttendees = countRegistrations > 0 ? ((countAttendees / countRegistrations) * 100).toFixed(1) : 0;
+
+            // EVENTS (Webinars)
+            const events = await strapi.db.query('api::webinar.webinar').findMany({
+                where: {
+                    Team: teamId,
+                    createdAt: { $gte: isoDate }
+                },
+                select: ['EventDuration']
+            });
+            const countEvents = events.length;
+            const avgWebinarDuration = countEvents > 0
+                ? (events.reduce((acc, curr) => acc + (parseInt(curr.EventDuration) || 0), 0) / countEvents).toFixed(0)
+                : 0;
+
+            // ON-DEMAND STATS
+            // We need logs where the related video/webinar belongs to the team.
+            // on-demand-video-logs -> on_demand_video -> Team
+            const logs = await strapi.db.query('api::on-demand-video-logs.on-demand-video-logs').findMany({
+                where: {
+                    on_demand_video: { Team: teamId },
+                    createdAt: { $gte: isoDate }
+                },
+                populate: {
+                    on_demand_video: {
+                        select: ['DurationSeconds']
                     }
                 }
-            } catch (e) { }
-            return w;
-        }));
+            });
 
-        return enriched;
+            // Average Watch Duration (Seconds)
+            // Average % Watched
+            let totalWatchSeconds = 0;
+            let totalPct = 0;
+            let logCount = logs.length;
+
+            logs.forEach(log => {
+                const watched = log.secondsWatched || 0;
+                const total = log.on_demand_video?.DurationSeconds || 0;
+
+                totalWatchSeconds += watched;
+                if (total > 0) {
+                    totalPct += (watched / total) * 100;
+                }
+            });
+
+            const avgOnDemandDuration = logCount > 0 ? (totalWatchSeconds / logCount).toFixed(0) : 0;
+            const avgOnDemandPct = logCount > 0 ? (totalPct / logCount).toFixed(1) : 0;
+
+
+            return {
+                registrations: countRegistrations,
+                pending: countPending,
+                attendees: countAttendees,
+                attendeesPct: pctAttendees,
+                events: countEvents,
+                avgWebinarDuration: avgWebinarDuration, // Minutes
+                avgOnDemandDuration: avgOnDemandDuration, // Seconds
+                avgOnDemandPct: avgOnDemandPct,
+                onDemandViews: logCount
+            };
+        };
+
+        const stats30 = await getStats(30);
+        const stats365 = await getStats(365);
+
+        // Also get TOTAL Pending (all time) for the "Pending Approvals" widget if it's meant to be a To-Do list
+        // Separate query for ALL pending
+        const allPending = await strapi.db.query('api::registration-data.registration-data').count({
+            where: {
+                Webinar: { Team: teamId },
+                Is_Moderator: false,
+                Approved: { $ne: true } // false or null
+            }
+        });
+
+        return {
+            stats30,
+            stats365,
+            allPending
+        };
+    },
+
+    async myWebinars(ctx) {
+        const user = await this.verifyAuth(ctx);
+        if (!user || !user.Team) {
+            console.log('[PortalAdmin] No User/Team');
+            return [{
+                id: 9999,
+                documentId: 'debug-no-team',
+                Webinar_Title: `DEBUG: No Team. UserID: ${user ? user.id : 'null'}`,
+                createdAt: new Date().toISOString(),
+                status: 'draft',
+                EventType: 'Webinar',
+                Registration_Data: []
+            }];
+        }
+
+        console.log('[PortalAdmin] Fetching webinars for Team:', user.Team.id);
+
+        try {
+            const webinars = await strapi.documents('api::webinar.webinar').findMany({
+                filters: { Team: user.Team.id },
+                sort: { createdAt: 'desc' },
+                populate: {
+                    Team: true,
+                    Landing_Page_Layout: {
+                        on: {
+                            'page-sections.section-hero': {
+                                populate: {
+                                    Image: true
+                                }
+                            }
+                        }
+                    }
+                },
+                status: 'draft'
+            });
+
+            console.log(`[PortalAdmin] Found ${webinars.length} webinars.`);
+
+            // Enrich with published status and Adapt Frontend Structure
+            const enriched = await Promise.all(webinars.map(async (w) => {
+                // Adapter: Frontend expects w.Landing_Page.Hero.Image
+                if (w.Landing_Page_Layout && Array.isArray(w.Landing_Page_Layout)) {
+                    const hero = w.Landing_Page_Layout.find(c => c.__component === 'page-sections.section-hero');
+                    if (hero) {
+                        w.Landing_Page = { Hero: hero };
+                    }
+                }
+
+                // Fetch Published Version
+                try {
+                    const pub = await strapi.documents('api::webinar.webinar').findOne({
+                        documentId: w.documentId,
+                        fields: ['publishedAt', 'updatedAt'],
+                        status: 'published'
+                    });
+                    if (pub) {
+                        w.publishedAt = pub.publishedAt;
+                        if (new Date(w.updatedAt).getTime() > new Date(pub.updatedAt).getTime()) {
+                            w.isModified = true;
+                        }
+                    }
+                } catch (e) { }
+
+                // Fetch Registration Data
+                try {
+                    const registrations = await strapi.db.query('api::registration-data.registration-data').findMany({
+                        where: { Webinar: w.id },
+                        select: ['id', 'Is_Moderator', 'Approved']
+                    });
+                    w.Registration_Data = registrations || [];
+                } catch (e) {
+                    strapi.log.error('Error fetching registrations:', e);
+                    w.Registration_Data = [];
+                }
+
+                return w;
+            }));
+
+            return enriched;
+        } catch (err) {
+            console.error('[PortalAdmin] myWebinars Error:', err);
+            // Return empty or throw, but don't crash with debug item anymore
+            strapi.log.error(err);
+            return [];
+        }
     },
 
     async mySpeakers(ctx) {
