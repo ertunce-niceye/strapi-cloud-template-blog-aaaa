@@ -170,6 +170,19 @@ export interface LivePageLiveCtaBlock extends Struct.ComponentSchema {
   };
 }
 
+export interface LivePageLiveDesignSettings extends Struct.ComponentSchema {
+  collectionName: 'components_live_page_live_design_settings';
+  info: {
+    displayName: 'Live_Design_Settings';
+    icon: 'paint-brush';
+  };
+  attributes: {
+    BackgroundColor: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'#ffffff'>;
+    BackgroundImage: Schema.Attribute.Media<'images'>;
+  };
+}
+
 export interface LivePageLiveQAPanel extends Struct.ComponentSchema {
   collectionName: 'components_live_page_live_q_a_panels';
   info: {
@@ -464,6 +477,7 @@ declare module '@strapi/strapi' {
       'global.footer-action-link': GlobalFooterActionLink;
       'global.navigation-link': GlobalNavigationLink;
       'live-page.live-cta-block': LivePageLiveCtaBlock;
+      'live-page.live-design-settings': LivePageLiveDesignSettings;
       'live-page.live-q-a-panel': LivePageLiveQAPanel;
       'live-page.live-resources-block': LivePageLiveResourcesBlock;
       'ondemand-page.on-demand-video': OndemandPageOnDemandVideo;

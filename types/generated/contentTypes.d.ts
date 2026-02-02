@@ -853,7 +853,7 @@ export interface ApiSpeakerSpeaker extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
-    Bio: Schema.Attribute.Blocks &
+    Bio: Schema.Attribute.RichText &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
@@ -1054,6 +1054,12 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         };
       }>;
     DryRun_Date: Schema.Attribute.DateTime &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    DryRun_List: Schema.Attribute.JSON &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
@@ -1269,7 +1275,12 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     Watching_Page_Layout: Schema.Attribute.DynamicZone<
-      ['live-page.live-resources-block', 'live-page.live-cta-block']
+      [
+        'live-page.live-resources-block',
+        'live-page.live-resources-block',
+        'live-page.live-cta-block',
+        'live-page.live-design-settings',
+      ]
     > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {

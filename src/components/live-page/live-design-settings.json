@@ -1,0 +1,22 @@
+{
+    "collectionName": "components_live_page_live_design_settings",
+    "info": {
+        "displayName": "Live_Design_Settings",
+        "icon": "paint-brush"
+    },
+    "options": {},
+    "attributes": {
+        "BackgroundImage": {
+            "type": "media",
+            "multiple": false,
+            "required": false,
+            "allowedTypes": [
+                "images"
+            ]
+        },
+        "BackgroundColor": {
+            "type": "string",
+            "default": "#ffffff"
+        }
+    }
+}

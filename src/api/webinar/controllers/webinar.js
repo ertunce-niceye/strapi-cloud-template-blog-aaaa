@@ -33,14 +33,21 @@ module.exports = createCoreController('api::webinar.webinar', ({ strapi }) => ({
         }
 
         const { id } = ctx.params;
-        const { inviteSpeakers, inviteModerators, inviteExtra } = ctx.request.body;
+        const {
+            inviteSpeakers,
+            inviteModerators,
+            inviteExtra,
+            dryRunDate, // NEW: Allow overriding date from request
+            specificSpeakerIds, // NEW: Filter speakers
+            specificModeratorIds // NEW: Filter moderators
+        } = ctx.request.body;
 
-        strapi.log.debug('Dry Run Invite Flags:', { inviteSpeakers, inviteModerators, inviteExtra });
+        strapi.log.debug('Dry Run Invite Flags:', { inviteSpeakers, inviteModerators, inviteExtra, dryRunDate });
 
         // Fetch Webinar using Document Service (Strapi 5+)
         const webinar = await strapi.documents('api::webinar.webinar').findOne({
             documentId: id,
-            populate: ['Speakers', 'Moderator_List', 'Zoom_Setup_Config', 'Team'], // Added Team for security check
+            populate: ['Speakers', 'Moderator_List', 'Zoom_Setup_Config', 'Team'],
         });
 
         if (!webinar) {
@@ -52,7 +59,9 @@ module.exports = createCoreController('api::webinar.webinar', ({ strapi }) => ({
             return ctx.forbidden('You do not have permission to access this webinar');
         }
 
-        if (!webinar.DryRun_Date) {
+        // Determine Date: Use Body first, then DB
+        const targetDate = dryRunDate || webinar.DryRun_Date;
+        if (!targetDate) {
             return ctx.badRequest('Dry Run Date is not set');
         }
 
@@ -60,9 +69,15 @@ module.exports = createCoreController('api::webinar.webinar', ({ strapi }) => ({
         const recipients = new Set();
 
         // Speakers
-        if (inviteSpeakers !== false) { // Default true if not specified, or explicit check
+        if (inviteSpeakers !== false) {
             if (webinar.Speakers && Array.isArray(webinar.Speakers)) {
                 webinar.Speakers.forEach(s => {
+                    // Filter if specific IDs provided
+                    if (specificSpeakerIds && Array.isArray(specificSpeakerIds) && specificSpeakerIds.length > 0) {
+                        // Ensure we match types (ID can be string or int)
+                        const sId = Number(s.id);
+                        if (!specificSpeakerIds.map(Number).includes(sId)) return;
+                    }
                     if (s.Email) recipients.add(s.Email);
                 });
             }
@@ -72,6 +87,13 @@ module.exports = createCoreController('api::webinar.webinar', ({ strapi }) => ({
         if (inviteModerators !== false) {
             if (webinar.Moderator_List && Array.isArray(webinar.Moderator_List)) {
                 webinar.Moderator_List.forEach(m => {
+                    // Filter if specific IDs provided (Moderators usually don't have IDs like speakers if simple JSON, but if relation yes)
+                    // Assuming Moderator_List is a component or relation. The populate above suggests relation or component.
+                    // If component, they define ID.
+                    if (specificModeratorIds && Array.isArray(specificModeratorIds) && specificModeratorIds.length > 0) {
+                        const mId = Number(m.id);
+                        if (!specificModeratorIds.map(Number).includes(mId)) return;
+                    }
                     if (m.Email) recipients.add(m.Email);
                 });
             }
@@ -127,15 +149,13 @@ module.exports = createCoreController('api::webinar.webinar', ({ strapi }) => ({
                 to,
                 from: process.env.SENDGRID_DEFAULT_FROM || 'noreply@vistreamtv.com',
                 subject: `Dry Run Invite: ${webinar.Webinar_Title}`,
-                text: `You are invited to the Dry Run for "${webinar.Webinar_Title}".\n\nDate: ${new Date(webinar.DryRun_Date).toLocaleString()}\nLink: ${joinLink}\n\nSee you there!`,
+                text: `You are invited to the Dry Run for "${webinar.Webinar_Title}".\n\nDate: ${new Date(targetDate).toLocaleString()}\nLink: ${joinLink}\n\nSee you there!`,
                 html: `<p>You are invited to the Dry Run for <strong>${webinar.Webinar_Title}</strong>.</p>
-               <p><strong>Date:</strong> ${new Date(webinar.DryRun_Date).toLocaleString()}</p>
+               <p><strong>Date:</strong> ${new Date(targetDate).toLocaleString()}</p>
                <p><strong>Link:</strong> <a href="${joinLink}">${joinLink}</a></p>
                <p>See you there!</p>`,
             });
         });
-
-
 
         try {
             await Promise.all(emailPromises);

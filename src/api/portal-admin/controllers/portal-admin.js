@@ -377,18 +377,8 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
         const { Full_Name, Email, Title, Affiliation, Photo, Bio } = ctx.request.body;
         console.log('[PortalAdmin] Payload:', { Full_Name, Email, Title, Affiliation, Photo });
 
-        // Construct Bio Blocks if Bio string provided
-        let BioBlocks = null;
-        if (Bio && Bio.trim().length > 0) {
-            BioBlocks = [
-                {
-                    type: 'paragraph',
-                    children: [
-                        { type: 'text', text: Bio }
-                    ]
-                }
-            ];
-        }
+        // Schema is now 'richtext' (markdown string), so we pass Bio directly.
+        // If frontend sends blocks (legacy), we might need to stringify, but SpeakerModal sends HTML string now.
 
         try {
             const newSpeaker = await strapi.documents('api::speaker.speaker').create({
@@ -398,7 +388,7 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
                     Title: Title,
                     Affiliation: Affiliation,
                     Photo: Photo,
-                    Bio: BioBlocks, // Pass null if empty, might be safer than []
+                    Bio: Bio,
                     Team: user.Team.id,
                     Company: user.Company ? user.Company.id : null
                 },
@@ -408,6 +398,47 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
         } catch (err) {
             console.error('[PortalAdmin] CreateSpeaker DB Error:', err);
             throw new ApplicationError('Database create failed: ' + err.message);
+        }
+    },
+
+    async updateSpeaker(ctx) {
+        const user = await this.verifyAuth(ctx);
+        if (!user || !user.Team) throw new ApplicationError('No Team assigned');
+
+        const { id } = ctx.params; // Using 'id' from route param :id
+        const { Full_Name, Email, Title, Affiliation, Photo, Bio } = ctx.request.body;
+
+        try {
+            // Verify ownership first using findMany with filters (safest)
+            // Or findOne. Note: Strapi v5 'documents' usually uses documentId.
+            // If route uses :id (integer), we should use strapi.db.query or findOne with where.
+            // Let's try to resolve by ID first.
+
+            const existing = await strapi.db.query('api::speaker.speaker').findOne({
+                where: { id: id, Team: user.Team.id }
+            });
+
+            if (!existing) return ctx.notFound();
+
+            // Update using document service if possible (triggers webhooks etc) or db query.
+            // Use documentId if we have it from existing.
+
+            const updatedSpeaker = await strapi.documents('api::speaker.speaker').update({
+                documentId: existing.documentId,
+                data: {
+                    Full_Name,
+                    Email,
+                    Title,
+                    Affiliation,
+                    Photo,
+                    Bio
+                },
+                status: 'published'
+            });
+            return updatedSpeaker;
+        } catch (err) {
+            console.error('[PortalAdmin] UpdateSpeaker DB Error:', err);
+            throw new ApplicationError('Update failed: ' + err.message);
         }
     },
 

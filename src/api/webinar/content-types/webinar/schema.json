@@ -44,6 +44,14 @@
         }
       }
     },
+    "DryRun_List": {
+      "type": "json",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
     "Slug": {
       "type": "uid",
       "pluginOptions": {
@@ -234,7 +242,9 @@
       },
       "components": [
         "live-page.live-resources-block",
-        "live-page.live-cta-block"
+        "live-page.live-resources-block",
+        "live-page.live-cta-block",
+        "live-page.live-design-settings"
       ]
     },
     "Registration_Closed_Message": {
