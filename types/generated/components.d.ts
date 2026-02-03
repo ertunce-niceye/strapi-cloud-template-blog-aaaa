@@ -111,6 +111,30 @@ export interface FormFieldsFieldEmailAddress extends Struct.ComponentSchema {
   };
 }
 
+export interface FormFieldsFieldName extends Struct.ComponentSchema {
+  collectionName: 'components_form_fields_field_names';
+  info: {
+    displayName: 'Field_Name';
+  };
+  attributes: {
+    Is_Required: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    Label: Schema.Attribute.String;
+    Placeholder: Schema.Attribute.String;
+  };
+}
+
+export interface FormFieldsFieldSpeciality extends Struct.ComponentSchema {
+  collectionName: 'components_form_fields_field_specialities';
+  info: {
+    displayName: 'Field_Speciality';
+  };
+  attributes: {
+    Is_Required: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    Label: Schema.Attribute.String;
+    Placeholder: Schema.Attribute.String;
+  };
+}
+
 export interface FormFieldsFieldTextInput extends Struct.ComponentSchema {
   collectionName: 'components_form_fields_field_text_inputs';
   info: {
@@ -472,6 +496,8 @@ declare module '@strapi/strapi' {
       'form-fields.field-country-picker': FormFieldsFieldCountryPicker;
       'form-fields.field-dropdown-select': FormFieldsFieldDropdownSelect;
       'form-fields.field-email-address': FormFieldsFieldEmailAddress;
+      'form-fields.field-name': FormFieldsFieldName;
+      'form-fields.field-speciality': FormFieldsFieldSpeciality;
       'form-fields.field-text-input': FormFieldsFieldTextInput;
       'form-fields.option-value': FormFieldsOptionValue;
       'global.footer-action-link': GlobalFooterActionLink;

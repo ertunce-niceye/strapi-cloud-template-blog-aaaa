@@ -1,0 +1,21 @@
+{
+    "collectionName": "components_form_fields_field_specialities",
+    "info": {
+        "displayName": "Field_Speciality"
+    },
+    "options": {},
+    "attributes": {
+        "Label": {
+            "type": "string",
+            "required": false
+        },
+        "Placeholder": {
+            "type": "string"
+        },
+        "Is_Required": {
+            "type": "boolean",
+            "default": false
+        }
+    },
+    "config": {}
+}

@@ -1042,6 +1042,12 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         };
       }>;
     Company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
+    Country_Config: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1193,6 +1199,8 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         'form-fields.field-dropdown-select',
         'form-fields.field-country-picker',
         'form-fields.field-consent-checkbox',
+        'form-fields.field-name',
+        'form-fields.field-speciality',
       ]
     > &
       Schema.Attribute.SetPluginOptions<{
@@ -1246,6 +1254,12 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         };
       }>;
     Speakers: Schema.Attribute.Relation<'manyToMany', 'api::speaker.speaker'>;
+    Speciality_Config: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     Start_DateTime: Schema.Attribute.DateTime &
       Schema.Attribute.SetPluginOptions<{
         i18n: {

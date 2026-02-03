@@ -210,8 +210,26 @@
         "form-fields.field-email-address",
         "form-fields.field-dropdown-select",
         "form-fields.field-country-picker",
-        "form-fields.field-consent-checkbox"
+        "form-fields.field-consent-checkbox",
+        "form-fields.field-name",
+        "form-fields.field-speciality"
       ]
+    },
+    "Country_Config": {
+      "type": "json",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "Speciality_Config": {
+      "type": "json",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "Zoom_Setup_Config": {
       "type": "component",

@@ -1,0 +1,21 @@
+{
+    "collectionName": "components_form_fields_field_names",
+    "info": {
+        "displayName": "Field_Name"
+    },
+    "options": {},
+    "attributes": {
+        "Label": {
+            "type": "string",
+            "required": false
+        },
+        "Placeholder": {
+            "type": "string"
+        },
+        "Is_Required": {
+            "type": "boolean",
+            "default": true
+        }
+    },
+    "config": {}
+}
