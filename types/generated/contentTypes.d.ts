@@ -455,6 +455,10 @@ export interface ApiCompanyCompany extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    Email_Templates: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::email-template.email-template'
+    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -476,6 +480,46 @@ export interface ApiCompanyCompany extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     Webinars: Schema.Attribute.Relation<'oneToMany', 'api::webinar.webinar'>;
+  };
+}
+
+export interface ApiEmailTemplateEmailTemplate
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'email_templates';
+  info: {
+    description: 'Email templates for webinar communications';
+    displayName: 'Email Template';
+    pluralName: 'email-templates';
+    singularName: 'email-template';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    Company: Schema.Attribute.Relation<'manyToOne', 'api::company.company'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    Design_JSON: Schema.Attribute.JSON & Schema.Attribute.Required;
+    Email_Type: Schema.Attribute.Enumeration<
+      ['Confirmation', 'Reminder', 'FollowUp']
+    > &
+      Schema.Attribute.Required;
+    HTML_Content: Schema.Attribute.Text;
+    Is_Default: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::email-template.email-template'
+    > &
+      Schema.Attribute.Private;
+    Name: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    Team: Schema.Attribute.Relation<'manyToOne', 'api::team.team'>;
+    Thumbnail_URL: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -952,6 +996,10 @@ export interface ApiTeamTeam extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    Email_Templates: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::email-template.email-template'
+    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::team.team'> &
       Schema.Attribute.Private;
@@ -1073,7 +1121,7 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
       }>;
     Email_Config: Schema.Attribute.Component<
       'webinar-details.email-automation-settings',
-      true
+      false
     > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1840,6 +1888,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::company.company': ApiCompanyCompany;
+      'api::email-template.email-template': ApiEmailTemplateEmailTemplate;
       'api::on-demand-video-logs.on-demand-video-logs': ApiOnDemandVideoLogsOnDemandVideoLogs;
       'api::ondemand-video.ondemand-video': ApiOndemandVideoOndemandVideo;
       'api::otp-request.otp-request': ApiOtpRequestOtpRequest;

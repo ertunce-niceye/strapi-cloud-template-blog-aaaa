@@ -8,13 +8,22 @@
     "Confirmation_Email_Content": {
       "type": "blocks"
     },
+    "Confirmation_Email_Design": {
+      "type": "json"
+    },
     "Post_Webinar_Follow_Up_Email_Content": {
       "type": "blocks"
+    },
+    "Post_Webinar_Follow_Up_Email_Design": {
+      "type": "json"
     },
     "Reminder_Emails": {
       "type": "component",
       "component": "webinar-details.reminder-email",
       "repeatable": true
+    },
+    "Reminder_Emails_Design": {
+      "type": "json"
     }
   },
   "config": {}

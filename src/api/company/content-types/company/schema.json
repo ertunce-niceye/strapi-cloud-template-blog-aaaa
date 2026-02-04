@@ -64,6 +64,12 @@
       "relation": "oneToMany",
       "target": "api::portal-admin.portal-admin",
       "mappedBy": "Company"
+    },
+    "Email_Templates": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::email-template.email-template",
+      "mappedBy": "Company"
     }
   }
 }

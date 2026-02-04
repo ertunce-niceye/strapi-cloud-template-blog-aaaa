@@ -249,7 +249,7 @@
         }
       },
       "component": "webinar-details.email-automation-settings",
-      "repeatable": true
+      "repeatable": false
     },
     "Watching_Page_Layout": {
       "type": "dynamiczone",

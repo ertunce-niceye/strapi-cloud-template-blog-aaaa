@@ -431,11 +431,14 @@ export interface WebinarDetailsEmailAutomationSettings
   };
   attributes: {
     Confirmation_Email_Content: Schema.Attribute.Blocks;
+    Confirmation_Email_Design: Schema.Attribute.JSON;
     Post_Webinar_Follow_Up_Email_Content: Schema.Attribute.Blocks;
+    Post_Webinar_Follow_Up_Email_Design: Schema.Attribute.JSON;
     Reminder_Emails: Schema.Attribute.Component<
       'webinar-details.reminder-email',
       true
     >;
+    Reminder_Emails_Design: Schema.Attribute.JSON;
   };
 }
 

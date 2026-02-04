@@ -1,0 +1,55 @@
+{
+    "kind": "collectionType",
+    "collectionName": "email_templates",
+    "info": {
+        "singularName": "email-template",
+        "pluralName": "email-templates",
+        "displayName": "Email Template",
+        "description": "Email templates for webinar communications"
+    },
+    "options": {
+        "draftAndPublish": false
+    },
+    "pluginOptions": {},
+    "attributes": {
+        "Name": {
+            "type": "string",
+            "required": true
+        },
+        "Email_Type": {
+            "type": "enumeration",
+            "enum": [
+                "Confirmation",
+                "Reminder",
+                "FollowUp"
+            ],
+            "required": true
+        },
+        "Design_JSON": {
+            "type": "json",
+            "required": true
+        },
+        "Thumbnail_URL": {
+            "type": "string"
+        },
+        "HTML_Content": {
+            "type": "text"
+        },
+        "Is_Default": {
+            "type": "boolean",
+            "default": false
+        },
+        "Company": {
+            "type": "relation",
+            "relation": "manyToOne",
+            "target": "api::company.company",
+            "inversedBy": "Email_Templates"
+        },
+        "Team": {
+            "type": "relation",
+            "relation": "manyToOne",
+            "target": "api::team.team",
+            "inversedBy": "Email_Templates"
+        }
+    }
+}
