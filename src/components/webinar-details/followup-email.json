@@ -1,0 +1,38 @@
+{
+    "collectionName": "components_webinar_details_followup_emails",
+    "info": {
+        "displayName": "FollowUp_Email",
+        "icon": "envelope",
+        "description": ""
+    },
+    "options": {},
+    "attributes": {
+        "Internal_Label": {
+            "type": "string"
+        },
+        "Days_After_Event": {
+            "type": "float"
+        },
+        "Email_Subject": {
+            "type": "string"
+        },
+        "Email_Body": {
+            "type": "blocks"
+        },
+        "Template_ID": {
+            "type": "string"
+        },
+        "Template_Name": {
+            "type": "string"
+        },
+        "Thumbnail_URL": {
+            "type": "string"
+        },
+        "HTML_Content": {
+            "type": "text"
+        },
+        "Design_JSON": {
+            "type": "json"
+        }
+    }
+}

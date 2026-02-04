@@ -9,7 +9,7 @@
       "type": "string"
     },
     "Days_Before_Event": {
-      "type": "integer"
+      "type": "float"
     },
     "Email_Subject": {
       "type": "string"
@@ -19,6 +19,18 @@
     },
     "Template_ID": {
       "type": "string"
+    },
+    "Template_Name": {
+      "type": "string"
+    },
+    "Thumbnail_URL": {
+      "type": "string"
+    },
+    "HTML_Content": {
+      "type": "text"
+    },
+    "Design_JSON": {
+      "type": "json"
     }
   },
   "config": {}

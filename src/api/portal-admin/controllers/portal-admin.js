@@ -472,6 +472,7 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
                 'Watching_Page_Layout',
                 'OnDemandVideos',
                 'Email_Config',
+                'Email_Config.Reminder_Emails', // CRITICAL: Deep populate for Reminder list
                 'Zoom_Setup_Config',
                 'Company',
                 'Company.CompanyLogo'
@@ -1065,7 +1066,16 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
 
             console.log('[PortalAdmin] Filtered Email Type:', emailType);
 
-            const filters = { Team: user.Team.id };
+            const filters = {
+                $and: [
+                    {
+                        $or: [
+                            { Team: { id: user.Team.id } },
+                            { Team: { id: { $null: true } } }
+                        ]
+                    }
+                ]
+            };
 
             if (emailType) {
                 filters.Email_Type = emailType;

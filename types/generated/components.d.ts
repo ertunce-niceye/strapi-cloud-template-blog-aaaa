@@ -430,15 +430,43 @@ export interface WebinarDetailsEmailAutomationSettings
     displayName: 'Email_Automation_Settings';
   };
   attributes: {
-    Confirmation_Email_Content: Schema.Attribute.Blocks;
+    Confirmation_Email_Content: Schema.Attribute.Text;
     Confirmation_Email_Design: Schema.Attribute.JSON;
-    Post_Webinar_Follow_Up_Email_Content: Schema.Attribute.Blocks;
+    Confirmation_Email_Subject: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'Registration Confirmed'>;
+    Confirmation_Template_ID: Schema.Attribute.String;
+    Confirmation_Template_Name: Schema.Attribute.String;
+    Confirmation_Thumbnail_URL: Schema.Attribute.String;
+    Post_Webinar_Follow_Up_Email_Content: Schema.Attribute.Text;
     Post_Webinar_Follow_Up_Email_Design: Schema.Attribute.JSON;
+    Post_Webinar_Follow_Up_Email_Subject: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'Webinar Resources'>;
+    Post_Webinar_Follow_Up_Template_Name: Schema.Attribute.String;
     Reminder_Emails: Schema.Attribute.Component<
       'webinar-details.reminder-email',
       true
     >;
     Reminder_Emails_Design: Schema.Attribute.JSON;
+  };
+}
+
+export interface WebinarDetailsFollowupEmail extends Struct.ComponentSchema {
+  collectionName: 'components_webinar_details_followup_emails';
+  info: {
+    description: '';
+    displayName: 'FollowUp_Email';
+    icon: 'envelope';
+  };
+  attributes: {
+    Days_After_Event: Schema.Attribute.Float;
+    Design_JSON: Schema.Attribute.JSON;
+    Email_Body: Schema.Attribute.Blocks;
+    Email_Subject: Schema.Attribute.String;
+    HTML_Content: Schema.Attribute.Text;
+    Internal_Label: Schema.Attribute.String;
+    Template_ID: Schema.Attribute.String;
+    Template_Name: Schema.Attribute.String;
+    Thumbnail_URL: Schema.Attribute.String;
   };
 }
 
@@ -460,11 +488,15 @@ export interface WebinarDetailsReminderEmail extends Struct.ComponentSchema {
     displayName: 'Reminder_Email';
   };
   attributes: {
-    Days_Before_Event: Schema.Attribute.Integer;
+    Days_Before_Event: Schema.Attribute.Float;
+    Design_JSON: Schema.Attribute.JSON;
     Email_Body: Schema.Attribute.Blocks;
     Email_Subject: Schema.Attribute.String;
+    HTML_Content: Schema.Attribute.Text;
     Internal_Label: Schema.Attribute.String;
     Template_ID: Schema.Attribute.String;
+    Template_Name: Schema.Attribute.String;
+    Thumbnail_URL: Schema.Attribute.String;
   };
 }
 
@@ -526,6 +558,7 @@ declare module '@strapi/strapi' {
       'shared.slider': SharedSlider;
       'webinar-details.custom-action-button': WebinarDetailsCustomActionButton;
       'webinar-details.email-automation-settings': WebinarDetailsEmailAutomationSettings;
+      'webinar-details.followup-email': WebinarDetailsFollowupEmail;
       'webinar-details.moderator-entry': WebinarDetailsModeratorEntry;
       'webinar-details.reminder-email': WebinarDetailsReminderEmail;
       'webinar-details.zoom-event-setup': WebinarDetailsZoomEventSetup;
