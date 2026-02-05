@@ -79,6 +79,14 @@
       "relation": "oneToMany",
       "target": "api::email-template.email-template",
       "mappedBy": "Team"
+    },
+    "meeting_credits": {
+      "type": "integer",
+      "default": 0
+    },
+    "webinar_credits": {
+      "type": "integer",
+      "default": 0
     }
   }
 }

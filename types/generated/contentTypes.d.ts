@@ -1008,6 +1008,7 @@ export interface ApiTeamTeam extends Struct.CollectionTypeSchema {
       'oneToMany',
       'plugin::upload.folder'
     >;
+    meeting_credits: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     Name: Schema.Attribute.String & Schema.Attribute.Required;
     OnDemandVideos: Schema.Attribute.Relation<
       'oneToMany',
@@ -1024,6 +1025,7 @@ export interface ApiTeamTeam extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     Users: Schema.Attribute.Relation<'oneToMany', 'admin::user'>;
+    webinar_credits: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     Webinars: Schema.Attribute.Relation<'oneToMany', 'api::webinar.webinar'>;
   };
 }
@@ -1177,6 +1179,7 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         };
       }> &
       Schema.Attribute.DefaultTo<false>;
+    is_purchased: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     Landing_Page_Layout: Schema.Attribute.DynamicZone<
       [
         'page-sections.section-hero',
@@ -1228,6 +1231,7 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
       'api::ondemand-video.ondemand-video'
     >;
     publishedAt: Schema.Attribute.DateTime;
+    purchased_event_type: Schema.Attribute.Enumeration<['webinar', 'meeting']>;
     Registration_Closed_Message: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {

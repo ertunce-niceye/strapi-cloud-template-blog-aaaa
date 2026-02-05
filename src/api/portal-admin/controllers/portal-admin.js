@@ -27,9 +27,14 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
                 return null;
             }
 
-            const user = await strapi.entityService.findOne('api::portal-admin.portal-admin', payload.id, {
+            // 3. Get User (Fix: use db.query to handle Integer ID from JWT)
+            console.log('[PortalAdmin] verifyAuth Payload:', payload);
+
+            const user = await strapi.db.query('api::portal-admin.portal-admin').findOne({
+                where: { id: payload.id },
                 populate: ['Team', 'Company']
             });
+
             if (!user) console.log('[PortalAdmin] Auth: User not found for ID', payload.id);
             return user;
         } catch (e) {
@@ -210,7 +215,26 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
     async me(ctx) {
         const user = await this.verifyAuth(ctx);
         if (!user) return ctx.unauthorized('Invalid token');
-        return await this.sanitizeOutput(user, ctx);
+
+        console.log('[PortalAdmin] me() Raw User Team:', user.Team);
+
+        const sanitized = await this.sanitizeOutput(user, ctx);
+
+        // FORCE ATTACH TEAM CREDITS
+        // sanitizeOutput removes relations, so we must manually re-add the specific fields we need.
+        if (user.Team) {
+            sanitized.Team = {
+                id: user.Team.id,
+                Name: user.Team.Name,
+                meeting_credits: user.Team.meeting_credits,
+                webinar_credits: user.Team.webinar_credits
+            };
+            console.log('[PortalAdmin] Force-Attached Team to Response:', sanitized.Team);
+        } else {
+            console.log('[PortalAdmin] No Team found on raw user object.');
+        }
+
+        return sanitized;
     },
 
     async updateSettings(ctx) {
@@ -846,14 +870,99 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             return ctx.forbidden('You do not have permission to publish this webinar');
         }
 
+        // --- CREDIT CHECK LOGIC ---
+        // --- CREDIT CHECK LOGIC ---
+        // 1. Identify Type & Purchase State
+        const currentEventType = (existing.EventType || 'Webinar').toLowerCase();
+        const purchasedEventType = (existing.purchased_event_type || '').toLowerCase(); // Needs schema update first
+
+        // 2. Fetch Team Credits (Fresh fetch)
+        const team = await strapi.db.query('api::team.team').findOne({
+            where: { id: user.Team.id },
+            select: ['meeting_credits', 'webinar_credits', 'documentId']
+        });
+        if (!team) throw new ApplicationError('Team not found');
+
+        // 3. Determine Action
+        let performCharge = false;
+        let performSwap = false;
+
+        if (!existing.is_purchased) {
+            performCharge = true;
+        } else if (purchasedEventType && purchasedEventType !== currentEventType) {
+            console.log(`[PortalAdmin] Type Mismatch: Purchased=${purchasedEventType}, Current=${currentEventType}. Triggering Swap.`);
+            performSwap = true;
+        } else {
+            console.log('[PortalAdmin] Already purchased and type matches. Free re-publish.');
+        }
+
+        if (performCharge || performSwap) {
+            const cost = 1;
+            const isMeeting = currentEventType === 'meeting';
+            const creditKey = isMeeting ? 'meeting_credits' : 'webinar_credits';
+            const available = team[creditKey] || 0;
+
+            console.log(`[PortalAdmin] Credits: Required ${cost} ${currentEventType}. Available: ${available}`);
+
+            if (available < cost) {
+                return ctx.badRequest('Insufficient credits', {
+                    code: 'INSUFFICIENT_CREDITS',
+                    required: cost,
+                    available: available,
+                    type: currentEventType
+                });
+            }
+
+            // Prepare Team Update
+            const teamUpdateData = {};
+
+            // Deduct New Token
+            // Note: If swapping, we deduct first. Validation ensures they have balance.
+            teamUpdateData[creditKey] = available - cost;
+
+            // If Swap, Refund Old Token
+            if (performSwap) {
+                const oldCreditKey = purchasedEventType === 'meeting' ? 'meeting_credits' : 'webinar_credits';
+                const oldBalance = team[oldCreditKey] || 0;
+                teamUpdateData[oldCreditKey] = oldBalance + 1;
+                console.log(`[PortalAdmin] Refunding 1 ${purchasedEventType} token. New Balance: ${oldBalance + 1}`);
+            }
+
+            // Execute Team Update
+            await strapi.documents('api::team.team').update({
+                documentId: team.documentId,
+                data: teamUpdateData
+            });
+
+            // Update Webinar Purchase Status
+            console.log(`[PortalAdmin] Updating Webinar Purchase Info: ${currentEventType}`);
+            await strapi.documents('api::webinar.webinar').update({
+                documentId: documentId,
+                data: {
+                    is_purchased: true,
+                    purchased_event_type: currentEventType
+                },
+                status: 'draft'
+            });
+        }
+
+        // --------------------------
+
         try {
             const published = await strapi.documents('api::webinar.webinar').publish({
                 documentId: documentId
             });
             // When just published, it is not modified
-            return { data: { ...published, isModified: false } };
+            // Also return the new purchased status if we just set it (though 'published' object might not have it if publish returns limited fields)
+            // But usually publish returns the entity.
+            return { data: { ...published, isModified: false, is_purchased: true } };
         } catch (err) {
             console.error('[PortalAdmin] Publish Error:', err);
+            // If publish fails but we deducted credits, we might have a state issue.
+            //Ideally transaction, but Strapi v4/v5 document service doesn't easily expose trans across types yet easily in controllers.
+            // We assume publish won't fail if draft exists. 
+            // If it does, user has "purchased" it but it stayed draft. They can try again and it will be free (is_purchased=true). 
+            // So this is safe.
             throw new ApplicationError('Publish failed: ' + err.message);
         }
     },
@@ -886,6 +995,87 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             console.error('[PortalAdmin] Unpublish Error:', err);
             throw new ApplicationError('Unpublish failed: ' + err.message);
         }
+    },
+
+
+
+    async swapEventType(ctx) {
+        const user = await this.verifyAuth(ctx);
+        if (!user || !user.Team) throw new ApplicationError('No Team assigned');
+
+        const { documentId } = ctx.params;
+        const { targetType } = ctx.request.body; // 'Webinar' or 'Meeting'
+
+        if (!targetType) return ctx.badRequest('Target type required');
+
+        const existing = await strapi.documents('api::webinar.webinar').findOne({
+            documentId: documentId,
+            populate: ['Team'],
+            status: 'draft' // We operate on draft
+        });
+
+        if (!existing) return ctx.notFound();
+        if (!existing.Team || existing.Team.id !== user.Team.id) return ctx.forbidden();
+        if (!existing.is_purchased) return ctx.badRequest('Webinar is not purchased yet. Just change the type locally.');
+
+        const currentType = (existing.EventType || 'Webinar').toLowerCase();
+        const purchasedType = (existing.purchased_event_type || existing.EventType || 'Webinar').toLowerCase();
+        const newTypeLower = targetType.toLowerCase();
+
+        if (currentType === newTypeLower) return ctx.badRequest('Already this type');
+
+        // Swap Logic
+        const cost = 1;
+        const isMeetingTarget = newTypeLower === 'meeting';
+
+        // Fetch fresh Team credits
+        const team = await strapi.db.query('api::team.team').findOne({
+            where: { id: user.Team.id },
+            select: ['meeting_credits', 'webinar_credits', 'documentId']
+        });
+
+        const creditKey = isMeetingTarget ? 'meeting_credits' : 'webinar_credits';
+        const available = team[creditKey] || 0;
+
+        if (available < cost) {
+            return ctx.badRequest('Insufficient credits for swap', {
+                code: 'INSUFFICIENT_CREDITS',
+                required: cost,
+                available: available,
+                type: newTypeLower
+            });
+        }
+
+        // Prepare Team Update
+        const teamUpdateData = {};
+
+        // 1. Deduct New Token
+        teamUpdateData[creditKey] = available - cost;
+
+        // 2. Refund Old Token (purchasedType)
+        const oldCreditKey = purchasedType === 'meeting' ? 'meeting_credits' : 'webinar_credits';
+        const oldBalance = team[oldCreditKey] || 0;
+        teamUpdateData[oldCreditKey] = oldBalance + 1;
+
+        console.log(`[PortalAdmin] Swapping ${purchasedType} -> ${newTypeLower}. Refund ${purchasedType} (+1), Deduct ${newTypeLower} (-1).`);
+
+        // Execute Team Update
+        await strapi.documents('api::team.team').update({
+            documentId: team.documentId,
+            data: teamUpdateData
+        });
+
+        // Update Webinar Type & Purchase Info
+        const updated = await strapi.documents('api::webinar.webinar').update({
+            documentId: documentId,
+            data: {
+                EventType: targetType,
+                purchased_event_type: newTypeLower
+            },
+            status: 'draft'
+        });
+
+        return { data: updated };
     },
 
     async upload(ctx) {

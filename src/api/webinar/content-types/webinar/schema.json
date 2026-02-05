@@ -429,6 +429,17 @@
       },
       "default": false
     },
+    "is_purchased": {
+      "type": "boolean",
+      "default": false
+    },
+    "purchased_event_type": {
+      "type": "enumeration",
+      "enum": [
+        "webinar",
+        "meeting"
+      ]
+    },
     "Survey_Responses": {
       "type": "relation",
       "relation": "oneToMany",
