@@ -506,18 +506,28 @@ export interface WebinarDetailsZoomEventSetup extends Struct.ComponentSchema {
     displayName: 'Zoom_Event_Setup';
   };
   attributes: {
+    Auto_Cloud_Recording: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
     Embed_Method: Schema.Attribute.Enumeration<['websdk', 'zoom_link']> &
       Schema.Attribute.DefaultTo<'websdk'>;
     Enable_Backstage_Settings: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<true>;
     Event_Duration_Minutes: Schema.Attribute.Integer;
+    Host_Video: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    Integration_Status: Schema.Attribute.Enumeration<
+      ['none', 'created', 'failed']
+    > &
+      Schema.Attribute.DefaultTo<'none'>;
     Internal_Label: Schema.Attribute.String;
-    Use_This_Zoom_Setup: Schema.Attribute.Boolean &
+    Mute_Upon_Entry: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<true>;
-    Zoom_Host_Email: Schema.Attribute.String & Schema.Attribute.Required;
+    Participant_Video: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    Zoom_API_Response: Schema.Attribute.JSON & Schema.Attribute.Private;
+    Zoom_Join_Link: Schema.Attribute.String;
     Zoom_Passcode: Schema.Attribute.String;
+    Zoom_Start_Link: Schema.Attribute.String & Schema.Attribute.Private;
     Zoom_Webinar_ID: Schema.Attribute.String;
-    Zoom_Webinar_UUID: Schema.Attribute.String;
   };
 }
 

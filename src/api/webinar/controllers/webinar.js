@@ -167,4 +167,89 @@ module.exports = createCoreController('api::webinar.webinar', ({ strapi }) => ({
             return ctx.internalServerError(`Failed to send emails: ${errorDetails}`);
         }
     },
+
+    async createZoomIntegration(ctx) {
+        const { id } = ctx.params;
+        const { autoRecording } = ctx.request.body;
+
+        // 1. Auth & Validation (Simplified for brevity, similar to sendDryRunInvite)
+        let portalUser = null;
+        try {
+            const authHeader = ctx.request.header.authorization;
+            const token = authHeader.replace('Bearer ', '');
+            const payload = await strapi.plugin('users-permissions').service('jwt').verify(token);
+            portalUser = await strapi.entityService.findOne('api::portal-admin.portal-admin', payload.id, {
+                populate: ['Team']
+            });
+        } catch (e) {
+            return ctx.unauthorized();
+        }
+
+        const webinar = await strapi.documents('api::webinar.webinar').findOne({
+            documentId: id,
+            populate: ['Speakers', 'Moderator_List', 'Zoom_Setup_Config', 'Team'],
+        });
+
+        if (!webinar || webinar.Team.id !== portalUser.Team.id) {
+            return ctx.forbidden();
+        }
+
+        try {
+            const zoomService = strapi.service('api::webinar.zoom');
+            const zoomData = await zoomService.createEvent(webinar, { autoRecording });
+
+            // Store Zoom Details
+            const updatedConfig = {
+                ...webinar.Zoom_Setup_Config,
+                Zoom_Webinar_ID: zoomData.id.toString(),
+                Zoom_Webinar_UUID: zoomData.uuid,
+                Zoom_Join_Link: zoomData.join_url,
+                Zoom_Start_Link: zoomData.start_url,
+                Integration_Status: 'created',
+                Zoom_API_Response: zoomData,
+                Auto_Cloud_Recording: autoRecording
+            };
+
+            await strapi.documents('api::webinar.webinar').update({
+                documentId: id,
+                data: {
+                    Zoom_Setup_Config: updatedConfig
+                }
+            });
+
+            // If Webinar, add speakers as Panelists
+            if (webinar.EventType === 'Webinar' && webinar.Speakers?.length > 0) {
+                await zoomService.addPanelists(zoomData.id, webinar.Speakers);
+            }
+
+            return ctx.send({ message: 'Zoom integration created successfully', zoomId: zoomData.id });
+        } catch (error) {
+            strapi.log.error('Zoom Integration Error:', error);
+            return ctx.badRequest('Failed to create Zoom integration: ' + error.message);
+        }
+    },
+
+    async getZoomSignature(ctx) {
+        const { id } = ctx.params;
+        const { role } = ctx.query; // 0 for participant, 1 for host
+
+        const webinar = await strapi.documents('api::webinar.webinar').findOne({
+            documentId: id,
+            populate: ['Zoom_Setup_Config'],
+        });
+
+        if (!webinar || !webinar.Zoom_Setup_Config?.Zoom_Webinar_ID) {
+            return ctx.notFound('Webinar or Zoom ID not found');
+        }
+
+        try {
+            const signature = strapi.service('api::webinar.zoom').generateSDKSignature(
+                webinar.Zoom_Setup_Config.Zoom_Webinar_ID,
+                role || 0
+            );
+            return ctx.send({ signature });
+        } catch (error) {
+            return ctx.badRequest(error.message);
+        }
+    }
 }));

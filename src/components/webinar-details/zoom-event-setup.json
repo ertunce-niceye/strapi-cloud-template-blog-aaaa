@@ -15,19 +15,8 @@
     "Internal_Label": {
       "type": "string"
     },
-    "Zoom_Host_Email": {
-      "type": "string",
-      "required": true
-    },
     "Zoom_Webinar_ID": {
       "type": "string"
-    },
-    "Zoom_Webinar_UUID": {
-      "type": "string"
-    },
-    "Use_This_Zoom_Setup": {
-      "type": "boolean",
-      "default": true
     },
     "Embed_Method": {
       "type": "enumeration",
@@ -40,6 +29,42 @@
     },
     "Zoom_Passcode": {
       "type": "string"
+    },
+    "Auto_Cloud_Recording": {
+      "type": "boolean",
+      "default": true
+    },
+    "Integration_Status": {
+      "type": "enumeration",
+      "enum": [
+        "none",
+        "created",
+        "failed"
+      ],
+      "default": "none"
+    },
+    "Zoom_Join_Link": {
+      "type": "string"
+    },
+    "Zoom_Start_Link": {
+      "type": "string",
+      "private": true
+    },
+    "Zoom_API_Response": {
+      "type": "json",
+      "private": true
+    },
+    "Host_Video": {
+      "type": "boolean",
+      "default": true
+    },
+    "Participant_Video": {
+      "type": "boolean",
+      "default": true
+    },
+    "Mute_Upon_Entry": {
+      "type": "boolean",
+      "default": true
     }
   },
   "config": {}

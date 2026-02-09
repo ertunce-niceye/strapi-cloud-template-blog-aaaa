@@ -1,14 +1,30 @@
+'use strict';
+
 module.exports = {
     routes: [
         {
-            method: "POST",
-            path: "/webinars/:id/dry-run-invite",
-            handler: "webinar.sendDryRunInvite",
+            method: 'POST',
+            path: '/webinars/:id/zoom-integrate',
+            handler: 'api::webinar.webinar.createZoomIntegration',
             config: {
-                auth: false, // Using manual Portal Admin verification in controller
-                policies: [],
-                middlewares: [],
+                auth: false, // Handled inside controller for simplicity or use policies
             },
         },
+        {
+            method: 'GET',
+            path: '/webinars/:id/zoom-signature',
+            handler: 'api::webinar.webinar.getZoomSignature',
+            config: {
+                auth: false,
+            },
+        },
+        {
+            method: 'POST',
+            path: '/portal-admins/webinar/:id/dry-run-invite',
+            handler: 'api::webinar.webinar.sendDryRunInvite',
+            config: {
+                auth: false,
+            }
+        }
     ],
 };
