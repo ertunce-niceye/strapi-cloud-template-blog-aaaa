@@ -1179,6 +1179,7 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
         };
       }> &
       Schema.Attribute.DefaultTo<false>;
+    Is_Retired: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     is_purchased: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     Landing_Page_Layout: Schema.Attribute.DynamicZone<
       [

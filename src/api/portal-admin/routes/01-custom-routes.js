@@ -19,6 +19,8 @@ module.exports = {
         { method: 'POST', path: '/portal-admins/webinar/:documentId/publish', handler: 'portal-admin.publishWebinar', config: { auth: false } }, // existing
         { method: 'POST', path: '/portal-admins/webinar/:documentId/swap-type', handler: 'portal-admin.swapEventType', config: { auth: false } }, // New Swap Route
         { method: 'POST', path: '/portal-admins/webinar/:documentId/unpublish', handler: 'portal-admin.unpublishWebinar', config: { auth: false } },
+        { method: 'POST', path: '/portal-admins/webinar/:documentId/retire', handler: 'portal-admin.retireWebinar', config: { auth: false } }, // New Retire Route
+        { method: 'DELETE', path: '/portal-admins/webinar/:documentId', handler: 'portal-admin.deleteWebinar', config: { auth: false } }, // New Delete Route
         { method: 'GET', path: '/portal-admins/speakers', handler: 'portal-admin.mySpeakers', config: { auth: false } },
         { method: 'POST', path: '/portal-admins/speakers/create', handler: 'portal-admin.createSpeaker', config: { auth: false } },
         { method: 'PUT', path: '/portal-admins/speakers/:id', handler: 'portal-admin.updateSpeaker', config: { auth: false } },

@@ -902,7 +902,7 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             const creditKey = isMeeting ? 'meeting_credits' : 'webinar_credits';
             const available = team[creditKey] || 0;
 
-            console.log(`[PortalAdmin] Credits: Required ${cost} ${currentEventType}. Available: ${available}`);
+            console.log(`[PortalAdmin] Credits Check: Required ${cost} ${currentEventType}. Available: ${available}`);
 
             if (available < cost) {
                 return ctx.badRequest('Insufficient credits', {
@@ -913,57 +913,72 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
                 });
             }
 
-            // Prepare Team Update
-            const teamUpdateData = {};
-
-            // Deduct New Token
-            // Note: If swapping, we deduct first. Validation ensures they have balance.
-            teamUpdateData[creditKey] = available - cost;
-
-            // If Swap, Refund Old Token
-            if (performSwap) {
-                const oldCreditKey = purchasedEventType === 'meeting' ? 'meeting_credits' : 'webinar_credits';
-                const oldBalance = team[oldCreditKey] || 0;
-                teamUpdateData[oldCreditKey] = oldBalance + 1;
-                console.log(`[PortalAdmin] Refunding 1 ${purchasedEventType} token. New Balance: ${oldBalance + 1}`);
+            // --- REORDERED LOGIC: Attempt Publish First ---
+            let publishedEntity = null;
+            try {
+                console.log('[PortalAdmin] Attempting to publish first...');
+                publishedEntity = await strapi.documents('api::webinar.webinar').publish({
+                    documentId: documentId
+                });
+            } catch (publishErr) {
+                console.error('[PortalAdmin] Publish failed (before deduction):', publishErr);
+                // Publication failed (likely validation errors), no credits deducted.
+                throw new ApplicationError('Publish failed (validation or system error): ' + publishErr.message);
             }
 
-            // Execute Team Update
-            await strapi.documents('api::team.team').update({
-                documentId: team.documentId,
-                data: teamUpdateData
-            });
+            // --- Publish Success, now deduct credits ---
+            try {
+                // Prepare Team Update
+                const teamUpdateData = {};
+                teamUpdateData[creditKey] = available - cost;
 
-            // Update Webinar Purchase Status
-            console.log(`[PortalAdmin] Updating Webinar Purchase Info: ${currentEventType}`);
-            await strapi.documents('api::webinar.webinar').update({
-                documentId: documentId,
-                data: {
-                    is_purchased: true,
-                    purchased_event_type: currentEventType
-                },
-                status: 'draft'
-            });
-        }
+                if (performSwap) {
+                    const oldCreditKey = purchasedEventType === 'meeting' ? 'meeting_credits' : 'webinar_credits';
+                    const oldBalance = team[oldCreditKey] || 0;
+                    teamUpdateData[oldCreditKey] = oldBalance + 1;
+                    console.log(`[PortalAdmin] Refunding 1 ${purchasedEventType} token during swap.`);
+                }
 
-        // --------------------------
+                // Execute Team Update
+                await strapi.documents('api::team.team').update({
+                    documentId: team.documentId,
+                    data: teamUpdateData
+                });
 
-        try {
-            const published = await strapi.documents('api::webinar.webinar').publish({
-                documentId: documentId
-            });
-            // When just published, it is not modified
-            // Also return the new purchased status if we just set it (though 'published' object might not have it if publish returns limited fields)
-            // But usually publish returns the entity.
-            return { data: { ...published, isModified: false, is_purchased: true } };
-        } catch (err) {
-            console.error('[PortalAdmin] Publish Error:', err);
-            // If publish fails but we deducted credits, we might have a state issue.
-            //Ideally transaction, but Strapi v4/v5 document service doesn't easily expose trans across types yet easily in controllers.
-            // We assume publish won't fail if draft exists. 
-            // If it does, user has "purchased" it but it stayed draft. They can try again and it will be free (is_purchased=true). 
-            // So this is safe.
-            throw new ApplicationError('Publish failed: ' + err.message);
+                // Update Webinar Purchase Status
+                console.log(`[PortalAdmin] Finalizing purchase info for ${currentEventType}`);
+                const finalUpdate = await strapi.documents('api::webinar.webinar').update({
+                    documentId: documentId,
+                    data: {
+                        is_purchased: true,
+                        purchased_event_type: currentEventType
+                    },
+                    status: 'published' // Ensure it's updated in the published version too
+                });
+
+                return { data: { ...finalUpdate, isModified: false, is_purchased: true } };
+
+            } catch (deductionErr) {
+                console.error('[PortalAdmin] Credit Deduction failed after successful publish! Rolling back publish...', deductionErr);
+                // ROLLBACK: Unpublish if possible
+                try {
+                    await strapi.documents('api::webinar.webinar').unpublish({ documentId: documentId });
+                } catch (rollbackErr) {
+                    console.error('[PortalAdmin] CRITICAL: Rollback unpublish failed!', rollbackErr);
+                }
+                throw new ApplicationError('System error during credit deduction. Please contact support.');
+            }
+        } else {
+            // Already purchased, just publish changes
+            try {
+                const published = await strapi.documents('api::webinar.webinar').publish({
+                    documentId: documentId
+                });
+                return { data: { ...published, isModified: false, is_purchased: true } };
+            } catch (err) {
+                console.error('[PortalAdmin] Re-publish Error:', err);
+                throw new ApplicationError('Publish changes failed: ' + err.message);
+            }
         }
     },
 
@@ -994,6 +1009,78 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
         } catch (err) {
             console.error('[PortalAdmin] Unpublish Error:', err);
             throw new ApplicationError('Unpublish failed: ' + err.message);
+        }
+    },
+
+    async retireWebinar(ctx) {
+        const user = await this.verifyAuth(ctx);
+        if (!user || !user.Team) throw new ApplicationError('No Team assigned');
+
+        const { documentId } = ctx.params;
+
+        // Find either draft or published
+        const existing = await strapi.documents('api::webinar.webinar').findOne({
+            documentId: documentId,
+            populate: ['Team']
+        });
+
+        if (!existing) return ctx.notFound();
+
+        if (!existing.Team || existing.Team.id !== user.Team.id) {
+            return ctx.forbidden('You do not have permission to retire this webinar');
+        }
+
+        try {
+            // Update the flag. We update 'draft' or both? 
+            // In Strapi v5, updating a documentId usually updates the draft.
+            const updated = await strapi.documents('api::webinar.webinar').update({
+                documentId: documentId,
+                data: {
+                    Is_Retired: true
+                }
+            });
+
+            // If it was already published, we should probably publish the update too
+            // to make Is_Retired: true visible on the public API immediately.
+            if (existing.publishedAt) {
+                await strapi.documents('api::webinar.webinar').publish({
+                    documentId: documentId
+                });
+            }
+
+            return { data: updated };
+        } catch (err) {
+            console.error('[PortalAdmin] Retire Error:', err);
+            throw new ApplicationError('Retire failed: ' + err.message);
+        }
+    },
+
+    async deleteWebinar(ctx) {
+        const user = await this.verifyAuth(ctx);
+        if (!user || !user.Team) throw new ApplicationError('No Team assigned');
+
+        const { documentId } = ctx.params;
+
+        // Verify ownership
+        const existing = await strapi.documents('api::webinar.webinar').findOne({
+            documentId: documentId,
+            populate: ['Team']
+        });
+
+        if (!existing) return ctx.notFound();
+
+        if (!existing.Team || existing.Team.id !== user.Team.id) {
+            return ctx.forbidden('You do not have permission to delete this webinar');
+        }
+
+        try {
+            await strapi.documents('api::webinar.webinar').delete({
+                documentId: documentId
+            });
+            return { data: { documentId, deleted: true } };
+        } catch (err) {
+            console.error('[PortalAdmin] Delete Error:', err);
+            throw new ApplicationError('Delete failed: ' + err.message);
         }
     },
 
