@@ -523,6 +523,10 @@ export interface WebinarDetailsZoomEventSetup extends Struct.ComponentSchema {
       Schema.Attribute.DefaultTo<true>;
     Participant_Video: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<true>;
+    Practice_Session: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    Question_And_Answer: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     Zoom_API_Response: Schema.Attribute.JSON & Schema.Attribute.Private;
     Zoom_Join_Link: Schema.Attribute.String;
     Zoom_Passcode: Schema.Attribute.String;

@@ -65,6 +65,14 @@
     "Mute_Upon_Entry": {
       "type": "boolean",
       "default": true
+    },
+    "Question_And_Answer": {
+      "type": "boolean",
+      "default": false
+    },
+    "Practice_Session": {
+      "type": "boolean",
+      "default": false
     }
   },
   "config": {}

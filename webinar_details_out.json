@@ -1,0 +1,192 @@
+{
+  "uuid": "uwtJLqKJSsiUeT1Jd1PWnw==",
+  "id": 87515677786,
+  "host_id": "FaxIyh2LQXWe339f9fgIeg",
+  "host_email": "kemal.ozdemir@vistream.tv",
+  "topic": "Çok Güzel Bir Webinar",
+  "type": 5,
+  "start_time": "2026-02-10T13:12:00Z",
+  "duration": 300,
+  "timezone": "America/New_York",
+  "agenda": "",
+  "created_at": "2026-02-10T14:04:40Z",
+  "start_url": "https://us06web.zoom.us/s/87515677786?zak=eyJ0eXAiOiJKV1QiLCJzdiI6IjAwMDAwMiIsInptX3NrbSI6InptX28ybSIsImFsZyI6IkhTMjU2In0.eyJpc3MiOiJ3ZWIiLCJjbHQiOjAsIm1udW0iOiI4NzUxNTY3Nzc4NiIsImF1ZCI6ImNsaWVudHNtIiwidWlkIjoiRmF4SXloMkxRWFdlMzM5ZjlmZ0llZyIsInppZCI6IjU1ZjdmNmViMzQ3NDQwZDZiYjg0NDA1MzQzZWMxY2Q1Iiwic2siOiIwIiwic3R5IjoxMDAsIndjZCI6InVzMDYiLCJleHAiOjE3NzA3Mzk4NjYsImlhdCI6MTc3MDczMjY2NiwiYWlkIjoiSkQxd1B1Nm9UbzJWRTFNVmhCczR6QSIsImNpZCI6IiJ9.iNAvxBu-WTAOEtedANXSjXTq0qK3-X4qfZpcjBmtfbw",
+  "join_url": "https://us06web.zoom.us/j/87515677786",
+  "settings": {
+    "host_video": true,
+    "panelists_video": true,
+    "approval_type": 2,
+    "audio": "both",
+    "auto_recording": "cloud",
+    "enforce_login": false,
+    "enforce_login_domains": "",
+    "alternative_hosts": "",
+    "alternative_host_update_polls": false,
+    "close_registration": false,
+    "show_share_button": true,
+    "allow_multiple_devices": true,
+    "practice_session": false,
+    "hd_video": true,
+    "question_answer": true,
+    "registrants_confirmation_email": true,
+    "on_demand": false,
+    "request_permission_to_unmute_participants": false,
+    "global_dial_in_countries": [
+      "US"
+    ],
+    "global_dial_in_numbers": [
+      {
+        "country_name": "US",
+        "number": "+1 669 444 9171",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "number": "+1 689 278 1000",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "number": "+1 719 359 4580",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "city": "Denver",
+        "number": "+1 720 707 2699",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "number": "+1 253 205 0468",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "city": "Tacoma",
+        "number": "+1 253 215 8782",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "city": "Washington DC",
+        "number": "+1 301 715 8592",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "number": "+1 305 224 1968",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "number": "+1 309 205 3325",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "city": "Chicago",
+        "number": "+1 312 626 6799",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "city": "Houston",
+        "number": "+1 346 248 7799",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "number": "+1 360 209 5623",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "number": "+1 386 347 5053",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "number": "+1 507 473 4847",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "number": "+1 564 217 2000",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "city": "New York",
+        "number": "+1 646 558 8656",
+        "type": "toll",
+        "country": "US"
+      },
+      {
+        "country_name": "US",
+        "number": "+1 646 931 3860",
+        "type": "toll",
+        "country": "US"
+      }
+    ],
+    "contact_name": "Panellist Invitation",
+    "contact_email": "kemal.ozdemir@vistream.tv",
+    "registrants_restrict_number": 0,
+    "registrants_email_notification": true,
+    "post_webinar_survey": false,
+    "meeting_authentication": false,
+    "language_interpretation": {
+      "enable": false
+    },
+    "question_and_answer": {
+      "enable": true,
+      "allow_anonymous_questions": true,
+      "answer_questions": "only",
+      "attendees_can_upvote": false,
+      "attendees_can_comment": false,
+      "allow_submit_questions": true
+    },
+    "allow_host_control_participant_mute_state": false,
+    "show_join_info": true,
+    "hd_video_for_attendees": false,
+    "send_1080p_video_to_attendees": false,
+    "panelist_authentication": false,
+    "email_language": "en-US",
+    "panelists_invitation_email_notification": true,
+    "attendees_and_panelists_reminder_email_notification": {
+      "enable": false,
+      "type": 0
+    },
+    "follow_up_attendees_email_notification": {
+      "enable": false,
+      "type": 0
+    },
+    "follow_up_absentees_email_notification": {
+      "enable": false,
+      "type": 0
+    },
+    "enable_session_branding": true,
+    "sign_language_interpretation": {
+      "enable": false
+    },
+    "email_in_attendee_report": false
+  },
+  "creation_source": "open_api",
+  "is_simulive": false,
+  "transition_to_live": false
+}

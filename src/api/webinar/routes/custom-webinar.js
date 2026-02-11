@@ -20,8 +20,24 @@ module.exports = {
         },
         {
             method: 'POST',
+            path: '/webinar-sync/:id',
+            handler: 'api::webinar.webinar.syncZoomSettings',
+            config: {
+                auth: false,
+            }
+        },
+        {
+            method: 'POST',
             path: '/portal-admins/webinar/:id/dry-run-invite',
             handler: 'api::webinar.webinar.sendDryRunInvite',
+            config: {
+                auth: false,
+            }
+        },
+        {
+            method: 'POST',
+            path: '/webinar-reset/:id',
+            handler: 'api::webinar.webinar.resetZoomIntegration',
             config: {
                 auth: false,
             }

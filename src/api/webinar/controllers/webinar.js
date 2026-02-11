@@ -169,6 +169,7 @@ module.exports = createCoreController('api::webinar.webinar', ({ strapi }) => ({
     },
 
     async createZoomIntegration(ctx) {
+        strapi.log.debug('Zoom Integration Triggered for ID:', ctx.params.id);
         const { id } = ctx.params;
         const { autoRecording } = ctx.request.body;
 
@@ -196,6 +197,13 @@ module.exports = createCoreController('api::webinar.webinar', ({ strapi }) => ({
 
         try {
             const zoomService = strapi.service('api::webinar.zoom');
+
+            // --- Cleanup Old Event ---
+            if (webinar.Zoom_Setup_Config?.Zoom_Webinar_ID) {
+                strapi.log.info(`Cleaning up old Zoom event: ${webinar.Zoom_Setup_Config.Zoom_Webinar_ID}`);
+                await zoomService.deleteEvent(webinar.Zoom_Setup_Config.Zoom_Webinar_ID, webinar.EventType);
+            }
+
             const zoomData = await zoomService.createEvent(webinar, { autoRecording });
 
             // Store Zoom Details
@@ -217,12 +225,27 @@ module.exports = createCoreController('api::webinar.webinar', ({ strapi }) => ({
                 }
             });
 
-            // If Webinar, add speakers as Panelists
-            if (webinar.EventType === 'Webinar' && webinar.Speakers?.length > 0) {
-                await zoomService.addPanelists(zoomData.id, webinar.Speakers);
+            // If Webinar, add speakers AND moderators as Panelists
+            if (webinar.EventType === 'Webinar') {
+                const speakers = webinar.Speakers || [];
+                const moderators = webinar.Moderator_List || [];
+                // Standardize moderator objects to match speaker structure expected by addPanelists
+                const moderatorObjects = moderators.map(m => ({
+                    Full_Name: m.Description || m.Email?.split('@')[0] || 'Moderator',
+                    Email: m.Email
+                }));
+
+                const allPanelists = [...speakers, ...moderatorObjects];
+                if (allPanelists.length > 0) {
+                    await zoomService.addPanelists(zoomData.id, allPanelists);
+                }
             }
 
-            return ctx.send({ message: 'Zoom integration created successfully', zoomId: zoomData.id });
+            return ctx.send({
+                message: 'Zoom integration created successfully',
+                zoomId: zoomData.id,
+                updatedConfig: updatedConfig
+            });
         } catch (error) {
             strapi.log.error('Zoom Integration Error:', error);
             return ctx.badRequest('Failed to create Zoom integration: ' + error.message);
@@ -250,6 +273,106 @@ module.exports = createCoreController('api::webinar.webinar', ({ strapi }) => ({
             return ctx.send({ signature });
         } catch (error) {
             return ctx.badRequest(error.message);
+        }
+    },
+
+    async syncZoomSettings(ctx) {
+        strapi.log.debug('Zoom Sync Triggered for ID:', ctx.params.id);
+        const { id } = ctx.params;
+
+        // 1. Auth & Validation
+        let portalUser = null;
+        try {
+            const authHeader = ctx.request.header.authorization;
+            const token = authHeader.replace('Bearer ', '');
+            const payload = await strapi.plugin('users-permissions').service('jwt').verify(token);
+            portalUser = await strapi.entityService.findOne('api::portal-admin.portal-admin', payload.id, {
+                populate: ['Team']
+            });
+        } catch (e) {
+            return ctx.unauthorized();
+        }
+
+        const webinar = await strapi.documents('api::webinar.webinar').findOne({
+            documentId: id,
+            populate: ['Zoom_Setup_Config', 'Team'],
+        });
+
+        if (!webinar || !webinar.Team || (portalUser && webinar.Team.id !== portalUser.Team.id)) {
+            return ctx.forbidden();
+        }
+
+        if (!webinar.Zoom_Setup_Config?.Zoom_Webinar_ID || webinar.Zoom_Setup_Config.Integration_Status !== 'created') {
+            return ctx.badRequest('No active Zoom integration found to sync.');
+        }
+
+        try {
+            const zoomService = strapi.service('api::webinar.zoom');
+            await zoomService.updateEvent(webinar);
+
+            return ctx.send({ message: 'Zoom settings synchronized successfully' });
+        } catch (error) {
+            strapi.log.error('Zoom Sync Error:', error);
+            return ctx.badRequest('Failed to sync Zoom settings: ' + error.message);
+        }
+    },
+
+    async resetZoomIntegration(ctx) {
+        strapi.log.debug('Zoom Reset Triggered for ID:', ctx.params.id);
+        const { id } = ctx.params;
+
+        // 1. Auth & Validation
+        let portalUser = null;
+        try {
+            const authHeader = ctx.request.header.authorization;
+            const token = authHeader.replace('Bearer ', '');
+            const payload = await strapi.plugin('users-permissions').service('jwt').verify(token);
+            portalUser = await strapi.entityService.findOne('api::portal-admin.portal-admin', payload.id, {
+                populate: ['Team']
+            });
+        } catch (e) {
+            return ctx.unauthorized();
+        }
+
+        const webinar = await strapi.documents('api::webinar.webinar').findOne({
+            documentId: id,
+            populate: ['Zoom_Setup_Config', 'Team'],
+        });
+
+        if (!webinar || !webinar.Team || (portalUser && webinar.Team.id !== portalUser.Team.id)) {
+            return ctx.forbidden();
+        }
+
+        try {
+            const zoomService = strapi.service('api::webinar.zoom');
+
+            // Delete from Zoom if ID exists
+            if (webinar.Zoom_Setup_Config?.Zoom_Webinar_ID) {
+                await zoomService.deleteEvent(webinar.Zoom_Setup_Config.Zoom_Webinar_ID, webinar.EventType);
+            }
+
+            // Clear Config in DB
+            const clearedConfig = {
+                ...webinar.Zoom_Setup_Config,
+                Zoom_Webinar_ID: null,
+                Zoom_Passcode: null,
+                Zoom_Join_Link: null,
+                Zoom_Start_Link: null,
+                Zoom_API_Response: null,
+                Integration_Status: 'none'
+            };
+
+            await strapi.documents('api::webinar.webinar').update({
+                documentId: id,
+                data: {
+                    Zoom_Setup_Config: clearedConfig
+                }
+            });
+
+            return ctx.send({ message: 'Zoom integration reset successfully', clearedConfig });
+        } catch (error) {
+            strapi.log.error('Zoom Reset Error:', error);
+            return ctx.badRequest('Failed to reset Zoom integration: ' + error.message);
         }
     }
 }));
