@@ -8,6 +8,7 @@ module.exports = {
         { method: 'POST', path: '/portal-admins/auth/login', handler: 'portal-admin.login', config: { auth: false } }, // Alias for frontend consistency
         { method: 'POST', path: '/portal-admins/auth/otp-verify', handler: 'portal-admin.otpVerify', config: { auth: false } }, // New OTP Route
         { method: 'GET', path: '/portal-admins/me', handler: 'portal-admin.me', config: { auth: false } },
+        { method: 'PUT', path: '/portal-admins/me', handler: 'portal-admin.updateMe', config: { auth: false } }, // New Update Route
         { method: 'PUT', path: '/portal-admins/settings', handler: 'portal-admin.updateSettings', config: { auth: false } },
         { method: 'GET', path: '/portal-admins/dashboard-stats', handler: 'portal-admin.dashboardStats', config: { auth: false } },
         { method: 'GET', path: '/portal-admins/my-webinars', handler: 'portal-admin.myWebinars', config: { auth: false } },

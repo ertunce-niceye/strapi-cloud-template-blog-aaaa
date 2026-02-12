@@ -237,6 +237,54 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
         return sanitized;
     },
 
+    async updateMe(ctx) {
+        const user = await this.verifyAuth(ctx);
+        if (!user) return ctx.unauthorized('Invalid token');
+
+        const { FirstName, LastName, PhoneNumber, Password } = ctx.request.body;
+
+        const updateData = {};
+        if (FirstName !== undefined) updateData.FirstName = FirstName;
+        if (LastName !== undefined) updateData.LastName = LastName;
+        if (PhoneNumber !== undefined) updateData.PhoneNumber = PhoneNumber;
+
+        if (Password && Password.trim() !== '') {
+            updateData.Password = await bcrypt.hash(Password, 10);
+        }
+
+        try {
+            // Update using current user's documentId
+            await strapi.documents('api::portal-admin.portal-admin').update({
+                documentId: user.documentId,
+                data: updateData
+            });
+
+            // Fetch fresh user data to return
+            const updatedUser = await strapi.db.query('api::portal-admin.portal-admin').findOne({
+                where: { id: user.id },
+                populate: ['Team', 'Company']
+            });
+
+            // Re-sanitize and attach team info if needed (similar to 'me')
+            const sanitized = await this.sanitizeOutput(updatedUser, ctx);
+
+            if (updatedUser.Team) {
+                sanitized.Team = {
+                    id: updatedUser.Team.id,
+                    Name: updatedUser.Team.Name,
+                    meeting_credits: updatedUser.Team.meeting_credits,
+                    webinar_credits: updatedUser.Team.webinar_credits
+                };
+            }
+
+            return sanitized;
+
+        } catch (err) {
+            console.error('[PortalAdmin] updateMe Error:', err);
+            return ctx.badRequest('Failed to update profile');
+        }
+    },
+
     async updateSettings(ctx) {
         const user = await this.verifyAuth(ctx);
         if (!user) return ctx.unauthorized('Invalid token');
