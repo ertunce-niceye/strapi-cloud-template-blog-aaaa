@@ -43,6 +43,14 @@ module.exports = {
             }
         },
         {
+            method: 'POST',
+            path: '/portal-admins/webinar/:id/send-test-email',
+            handler: 'api::webinar.webinar.sendTestEmail',
+            config: {
+                auth: false,
+            }
+        },
+        {
             method: 'GET',
             path: '/webinars/:id/zoom-reports',
             handler: 'api::webinar.webinar.getReports',

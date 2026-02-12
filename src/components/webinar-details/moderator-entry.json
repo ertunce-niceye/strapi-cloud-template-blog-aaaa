@@ -10,6 +10,9 @@
         "Email": {
             "type": "email",
             "required": true
+        },
+        "Description": {
+            "type": "string"
         }
     }
 }

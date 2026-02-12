@@ -478,6 +478,7 @@ export interface WebinarDetailsModeratorEntry extends Struct.ComponentSchema {
     icon: 'user-check';
   };
   attributes: {
+    Description: Schema.Attribute.String;
     Email: Schema.Attribute.Email & Schema.Attribute.Required;
   };
 }
