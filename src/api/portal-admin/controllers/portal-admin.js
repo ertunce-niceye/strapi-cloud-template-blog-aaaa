@@ -507,6 +507,8 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             status: 'draft'
         });
 
+        console.log(`[PortalAdmin] getWebinar(${documentId}) -> media_folder_id:`, webinar ? webinar.media_folder_id : 'WEBINAR NOT FOUND');
+
         if (!webinar || !webinar.Team || webinar.Team.id !== user.Team.id) {
             return ctx.forbidden('Access denied');
         }
@@ -910,12 +912,32 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
 
         const { data } = ctx.request.body;
 
+        // 1. Create Media Folder
+        let mediaFolderId = null;
+        try {
+            const folderName = data.Webinar_Title || 'Untitled Webinar';
+            const folderPayload = {
+                name: folderName,
+                parent: null, // Root level for now
+                team: user.Team.id
+            };
+            if (user.Company) {
+                folderPayload.company = user.Company.id;
+            }
+            const folder = await strapi.plugin('upload').service('folder').create(folderPayload);
+            if (folder) mediaFolderId = folder.id;
+        } catch (folderErr) {
+            console.error('[PortalAdmin] Failed to create media folder:', folderErr);
+        }
+        console.log('[PortalAdmin] createWebinar -> mediaFolderId:', mediaFolderId);
+
         const payload = {
             ...data,
             Certificate_Active: false, // Force default false
             Survey_Active: false,      // Force default false
             Team: user.Team.id,
             Company: user.Company ? user.Company.id : null,
+            media_folder_id: mediaFolderId
         };
 
         const newWebinar = await strapi.documents('api::webinar.webinar').create({
@@ -923,7 +945,12 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             status: 'draft'
         });
 
-        return { data: newWebinar };
+        const created = await strapi.documents('api::webinar.webinar').findOne({
+            documentId: newWebinar.documentId,
+            status: 'draft'
+        });
+
+        return { data: created };
     },
 
     async updateWebinar(ctx) {
@@ -945,9 +972,37 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             return ctx.forbidden('You do not have permission to edit this webinar');
         }
 
+        // Lazy create folder if missing?
+        let folderUpdate = {};
+        if (!existing.media_folder_id && data.Webinar_Title && !data.media_folder_id) {
+            try {
+                // Check if we should create one. 
+                // Only if title changed? Or just ensuring it has one.
+                // Let's create one if it doesn't exist.
+                const folderName = data.Webinar_Title || existing.Webinar_Title || 'Webinar Folder';
+                const folder = await strapi.plugin('upload').service('folder').create({
+                    name: folderName,
+                    parent: null
+                });
+                if (folder) folderUpdate.media_folder_id = folder.id;
+            } catch (folderErr) {
+                console.error('[PortalAdmin] Failed to create lazy media folder:', folderErr);
+            }
+            if (folderUpdate.media_folder_id) {
+                console.log('[PortalAdmin] updateWebinar -> lazy created folder:', folderUpdate.media_folder_id);
+            }
+        }
+
         const updated = await strapi.documents('api::webinar.webinar').update({
             documentId: documentId,
-            data: data,
+            data: { ...data, ...folderUpdate },
+            status: 'draft',
+            populate: ['Speakers', 'Moderator_List', 'Zoom_Setup_Config']
+        });
+
+        // Refetch to be absolutely sure we have the latest media_folder_id and other fields
+        const finalWebinar = await strapi.documents('api::webinar.webinar').findOne({
+            documentId: documentId,
             status: 'draft',
             populate: ['Speakers', 'Moderator_List', 'Zoom_Setup_Config']
         });
@@ -960,17 +1015,16 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
                 status: 'published'
             });
             if (published) {
-                updated.publishedAt = published.publishedAt;
-                // Since we just updated the draft, it IS modified relative to published (conceptually)
-                // or we check timestamp:
-                updated.isModified = true;
+                finalWebinar.publishedAt = published.publishedAt;
+                finalWebinar.isModified = true;
             }
         } catch (e) {
             // ignore
         }
 
-        return { data: updated };
+        return { data: finalWebinar };
     },
+
 
     async publishWebinar(ctx) {
         const user = await this.verifyAuth(ctx);
@@ -1300,16 +1354,90 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             return ctx.badRequest('No files uploaded');
         }
 
+        // Check folder param (body or query)
+        const folderId = ctx.request.body.folder || ctx.request.query.folder || null;
+        console.log('[PortalAdmin] Upload Folder:', folderId);
+
         try {
             console.log('[PortalAdmin] Delegating upload to plugin...');
+            // Debug config
+            const uploadConfig = strapi.config.get('plugin.upload');
+            // console.log('[PortalAdmin] Current Upload Config:', JSON.stringify(uploadConfig, null, 2));
+
             // Use Service directly
-            const uploadedFiles = await strapi.plugin('upload').service('upload').upload({
-                data: {},
+            const fileInfo = {
+                folder: folderId,
+                team: user.Team.id
+            };
+            if (user.Company) {
+                fileInfo.company = user.Company.id;
+            }
+
+            const result = await strapi.plugin('upload').service('upload').upload({
+                data: {
+                    fileInfo: fileInfo
+                },
                 files: files
             });
-            console.log('[PortalAdmin] Upload success', uploadedFiles.length);
+
+            // Normalize to array (single file upload returns object)
+            const uploadedFiles = Array.isArray(result) ? result : [result];
+            console.log('[PortalAdmin] Upload success, count:', uploadedFiles.length);
+
+            // Explicitly update files to ensure Team/Company are assigned
+            if (uploadedFiles.length > 0) {
+                for (const file of uploadedFiles) {
+                    if (file && file.id) {
+                        try {
+                            await strapi.db.query('plugin::upload.file').update({
+                                where: { id: file.id },
+                                data: {
+                                    team: user.Team.id,
+                                    company: user.Company ? user.Company.id : null
+                                }
+                            });
+                        } catch (updateErr) {
+                            console.error(`[PortalAdmin] Failed to update file ${file.id}:`, updateErr);
+                        }
+                    }
+                }
+            }
+
             return uploadedFiles;
         } catch (e) {
+            // Windows specific fix: If upload succeeded but temp file delete failed (EPERM/unlink), ignore it.
+            if (e.code === 'EPERM' && e.syscall === 'unlink') {
+                console.warn('[PortalAdmin] Suppressing EPERM unlink error. Upload likely succeeded.');
+
+                try {
+                    const latestFiles = await strapi.db.query('plugin::upload.file').findMany({
+                        orderBy: { createdAt: 'desc' },
+                        limit: files.length || 1
+                    });
+
+                    // FIXED: Also update Team/Company for these files since the main try block was interrupted
+                    if (latestFiles && latestFiles.length > 0) {
+                        for (const file of latestFiles) {
+                            try {
+                                await strapi.db.query('plugin::upload.file').update({
+                                    where: { id: file.id },
+                                    data: {
+                                        team: user.Team.id,
+                                        company: user.Company ? user.Company.id : null
+                                    }
+                                });
+                            } catch (updateErr) {
+                                console.error(`[PortalAdmin] Failed to update file ${file.id} (EPERM Recovery):`, updateErr);
+                            }
+                        }
+                    }
+
+                    return latestFiles;
+                } catch (fetchErr) {
+                    return [];
+                }
+            }
+
             strapi.log.error('Portal upload failed:', e);
             console.error('[PortalAdmin] Upload Exception:', e);
             throw new ApplicationError('Upload service failed: ' + e.message);
@@ -1412,7 +1540,8 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             // plugin::upload.folder
             const folders = await strapi.db.query('plugin::upload.folder').findMany({
                 where: {
-                    parent: folderId ? folderId : null
+                    parent: folderId ? folderId : null,
+                    team: user.Team.id
                 },
                 orderBy: { name: 'asc' }
             });
@@ -1422,6 +1551,7 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             const files = await strapi.db.query('plugin::upload.file').findMany({
                 where: {
                     folder: folderId ? folderId : null,
+                    team: user.Team.id
                     // Optional: Filter by mime type if needed, but UI does it for now
                 },
                 orderBy: { createdAt: 'desc' }
@@ -1444,6 +1574,107 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
         } catch (err) {
             console.error('[PortalAdmin] Media Library Error:', err);
             throw new ApplicationError('Failed to fetch media library');
+        }
+    },
+
+    async createMediaFolder(ctx) {
+        const user = await this.verifyAuth(ctx);
+        if (!user) return ctx.unauthorized();
+
+        const { name, parent } = ctx.request.body;
+        if (!name) return ctx.badRequest('Folder name is required');
+
+        try {
+            const folderPayload = {
+                name,
+                parent: parent || null,
+                team: user.Team.id
+            };
+            if (user.Company) {
+                folderPayload.company = user.Company.id;
+            }
+
+            const folder = await strapi.plugin('upload').service('folder').create(folderPayload);
+            return folder;
+        } catch (err) {
+            console.error('[PortalAdmin] Create Folder Error:', err);
+            throw new ApplicationError('Failed to create folder');
+        }
+    },
+
+    async deleteMedia(ctx) {
+        const user = await this.verifyAuth(ctx);
+        if (!user) return ctx.unauthorized();
+
+        const { fileIds, folderIds } = ctx.request.body;
+        console.log('[PortalAdmin] deleteMedia requested:', { fileIds, folderIds });
+
+        try {
+            // 1. Delete Files
+            if (fileIds && fileIds.length > 0) {
+                const files = await strapi.db.query('plugin::upload.file').findMany({
+                    where: { id: { $in: fileIds } }
+                });
+
+                for (const file of files) {
+                    try {
+                        await strapi.plugin('upload').service('upload').remove(file);
+                    } catch (fErr) {
+                        console.error(`[PortalAdmin] Failed to delete file ${file.id}:`, fErr);
+                    }
+                }
+            }
+
+            // 2. Delete Folders (Recursive)
+            // Helper function for recursive deletion
+            const deleteFolderRecursive = async (folderId) => {
+                // Find children folders
+                const subfolders = await strapi.db.query('plugin::upload.folder').findMany({
+                    where: { parent: folderId },
+                    select: ['id']
+                });
+
+                // Recurse first (depth-first)
+                for (const sub of subfolders) {
+                    await deleteFolderRecursive(sub.id);
+                }
+
+                // Delete files in this folder
+                const filesInFolder = await strapi.db.query('plugin::upload.file').findMany({
+                    where: { folder: folderId }
+                });
+
+                for (const file of filesInFolder) {
+                    try {
+                        // Use upload service to remove file (cleans from provider)
+                        await strapi.plugin('upload').service('upload').remove(file);
+                    } catch (fErr) {
+                        console.error(`[PortalAdmin] Failed to delete file ${file.id} in folder ${folderId}:`, fErr);
+                    }
+                }
+
+                // Finally delete the folder using DB query (safest/direct)
+                // Using DB delete prevents service signature mismatches
+                try {
+                    await strapi.db.query('plugin::upload.folder').delete({ where: { id: folderId } });
+                } catch (err) {
+                    console.error(`[PortalAdmin] Failed to delete folder ${folderId}:`, err);
+                    throw err;
+                }
+            };
+
+            if (folderIds && folderIds.length > 0) {
+                for (const fid of folderIds) {
+                    await deleteFolderRecursive(fid);
+                }
+            }
+
+            return { success: true };
+        } catch (err) {
+            console.error('[PortalAdmin] Delete Media Error:', err);
+            // Dump full error object for debugging
+            console.error(JSON.stringify(err, null, 2));
+            throw new ApplicationError('Failed to delete media: ' + err.message);
         }
     },
 

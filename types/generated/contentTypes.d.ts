@@ -1201,6 +1201,7 @@ export interface ApiWebinarWebinar extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::webinar.webinar'
     >;
+    media_folder_id: Schema.Attribute.Integer;
     Moderator_List: Schema.Attribute.Component<
       'webinar-details.moderator-entry',
       true

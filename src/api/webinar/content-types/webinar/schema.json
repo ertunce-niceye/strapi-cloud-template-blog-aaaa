@@ -502,6 +502,9 @@
     },
     "Report_Summary": {
       "type": "json"
+    },
+    "media_folder_id": {
+      "type": "integer"
     }
   }
 }

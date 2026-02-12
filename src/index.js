@@ -110,6 +110,28 @@ module.exports = {
   bootstrap({ strapi }) {
     strapi.log.info('bootstrap çalıştı');
 
+    // Windows EPERM Fix: Suppress unhandled rejections for temporary file deletion
+    process.on('unhandledRejection', (reason, p) => {
+      if (reason && reason.code === 'EPERM' && reason.syscall === 'unlink') {
+        // console.warn(' suppressed unhandledRejection EPERM/unlink');
+        return;
+      }
+      console.error('Unhandled Rejection at:', p, 'reason:', reason);
+    });
+
+    process.on('uncaughtException', (err) => {
+      if (err && err.code === 'EPERM' && err.syscall === 'unlink') {
+        // console.warn(' suppressed uncaughtException EPERM/unlink');
+        return;
+      }
+      console.error('Uncaught Exception:', err);
+      // Give it a few seconds to log then exit? Or keep running if critical?
+      // For EPERM on unlink, we can keep running. For others, usually process.exit(1).
+      if (err && (err.code !== 'EPERM' || err.syscall !== 'unlink')) {
+        process.exit(1);
+      }
+    });
+
     strapi.db.lifecycles.subscribe({
       // Hook into all isolated models
       models: [
