@@ -499,6 +499,9 @@
     "Is_Retired": {
       "type": "boolean",
       "default": false
+    },
+    "Report_Summary": {
+      "type": "json"
     }
   }
 }

@@ -103,4 +103,75 @@ module.exports = {
             rule: '0 8 * * *', // Daily at 8 AM
         },
     },
+    /**
+     * Zoom Report Sync Job
+     * Runs every 15 minutes
+     */
+    'zoomReportSync': {
+        task: async ({ strapi }) => {
+            try {
+                strapi.log.info('[ZoomReportSync] Starting sync job...');
+                const now = new Date();
+                const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+                // Find webinars that started within the last 24 hours (so they might have ended recently)
+                // Filter: Start_DateTime >= 24h ago AND Start_DateTime <= Now
+                const webinars = await strapi.entityService.findMany('api::webinar.webinar', {
+                    filters: {
+                        Start_DateTime: {
+                            $gte: twentyFourHoursAgo.toISOString(),
+                            $lte: now.toISOString(),
+                        },
+                        // Optimization: Only update if Report_Summary is missing OR last_updated_at is old?
+                        // For now, let's just attempt update for recent webinars to ensure data is fresh.
+                        // We can add a check inside the loop or filter here if schema allows deep filtering on JSON.
+                        // JSON filtering is tricky in Strapi. Better fetch and check in code.
+                    },
+                    populate: ['Zoom_Setup_Config'],
+                });
+
+                strapi.log.info(`[ZoomReportSync] Found ${webinars.length} recent webinars to check.`);
+
+                for (const webinar of webinars) {
+                    const zoomId = webinar.Zoom_Setup_Config?.Zoom_Webinar_ID;
+                    if (!zoomId) continue;
+
+                    // Check if webinar has effectively ended
+                    const start = new Date(webinar.Start_DateTime); // assuming UTC or ISO
+                    // Clean duration
+                    const rawDuration = String(webinar.EventDuration || '60').replace(/[^0-9]/g, '');
+                    const durationMins = parseInt(rawDuration) || 60;
+                    const endDateTime = new Date(start.getTime() + durationMins * 60 * 1000);
+
+                    // If it hasn't ended yet, skip
+                    if (now < endDateTime) continue;
+
+                    // If it ended more than 30 mins ago (give Zoom time to process report)
+                    // adjust logic as needed. User said "start + duration + 1 hour".
+                    const collectionTime = new Date(endDateTime.getTime() + 60 * 60 * 1000);
+
+                    if (now >= collectionTime) {
+                        // Check if we already have a recent report (e.g. updated in last 1 hour)
+                        const lastUpdated = webinar.Report_Summary?.last_updated_at ? new Date(webinar.Report_Summary.last_updated_at) : null;
+                        if (lastUpdated && (now.getTime() - lastUpdated.getTime()) < 60 * 60 * 1000) {
+                            // Already updated recently, skip to save API calls
+                            continue;
+                        }
+
+                        strapi.log.info(`[ZoomReportSync] Updating report for: ${webinar.Webinar_Title}`);
+                        try {
+                            await strapi.service('api::webinar.zoom').updateWebinarReport(webinar.id, zoomId);
+                        } catch (err) {
+                            strapi.log.error(`[ZoomReportSync] Error updating ${webinar.Webinar_Title}: ${err.message}`);
+                        }
+                    }
+                }
+            } catch (err) {
+                strapi.log.error('[ZoomReportSync] Job failed', err);
+            }
+        },
+        options: {
+            rule: '*/15 * * * *', // Every 15 minutes
+        },
+    },
 };

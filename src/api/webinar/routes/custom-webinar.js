@@ -41,6 +41,14 @@ module.exports = {
             config: {
                 auth: false,
             }
+        },
+        {
+            method: 'GET',
+            path: '/webinars/:id/zoom-reports',
+            handler: 'api::webinar.webinar.getReports',
+            config: {
+                auth: false,
+            }
         }
     ],
 };

@@ -61,8 +61,14 @@
         }
       }
     },
-    "Approved": {
-      "type": "boolean",
+    "Status": {
+      "type": "enumeration",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
       "pluginOptions": {
         "i18n": {
           "localized": true

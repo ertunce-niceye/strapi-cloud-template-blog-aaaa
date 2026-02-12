@@ -279,11 +279,11 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
                     createdAt: { $gte: isoDate },
                     Is_Moderator: false
                 },
-                select: ['id', 'Approved', 'createdAt']
+                select: ['id', 'Status', 'createdAt']
             });
 
             const countRegistrations = registrations.length;
-            const countPending = registrations.filter(r => !r.Approved).length;
+            const countPending = registrations.filter(r => !r.Status || r.Status === 'pending').length;
 
             // ATTENDEES (Placeholder: 0)
             const countAttendees = 0;
@@ -359,7 +359,10 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             where: {
                 Webinar: { Team: teamId },
                 Is_Moderator: false,
-                Approved: { $ne: true } // false or null
+                $or: [
+                    { Status: 'pending' },
+                    { Status: null }
+                ]
             }
         });
 
@@ -437,7 +440,7 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
                 try {
                     const registrations = await strapi.db.query('api::registration-data.registration-data').findMany({
                         where: { Webinar: w.id },
-                        select: ['id', 'Is_Moderator', 'Approved']
+                        select: ['id', 'Is_Moderator', 'Status']
                     });
                     w.Registration_Data = registrations || [];
                 } catch (e) {
@@ -551,28 +554,107 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             return ctx.forbidden('You do not have permission to view registrations for this webinar');
         }
 
-        // 2. Fetch Registrations
-        // Note: Relation is Unidirectional (Registration -> Webinar)
-        // We use db.query to filter by Webinar ID.
-        // Webinar.id is the integer ID, but Registration might point to documentId or ID depending on v5 migration state.
-        // The schema for Registration says "Webinar" is a relation.
-        // Let's try filtering by Webinar ID.
-
+        // 2. Fetch Registrations using db.query with integer ID (same as getReport)
+        // strapi.documents filter on relation documentId doesn't work — DB stores integer IDs
         try {
-            // Use Document Service for v5 compatibility (handles documentId relations)
-            const registrations = await strapi.documents('api::registration-data.registration-data').findMany({
-                filters: {
-                    Webinar: {
-                        documentId: documentId
-                    }
+            const registrations = await strapi.db.query('api::registration-data.registration-data').findMany({
+                where: {
+                    Webinar: webinar.id
                 },
-                sort: 'createdAt:desc',
-                status: 'published' // or draft? Registrations usually don't have draft/pub, but API requires it or defaults
+                orderBy: { createdAt: 'desc' }
             });
             return { data: registrations };
         } catch (err) {
             console.error('[PortalAdmin] getRegistrants Error:', err);
             return ctx.badRequest('Failed to fetch registrations');
+        }
+    },
+
+    // Approve a single registration
+    async approveRegistration(ctx) {
+        const user = await this.verifyAuth(ctx);
+        if (!user || !user.Team) return ctx.forbidden('Access denied');
+
+        const { documentId, regId } = ctx.params;
+
+        // 1. Verify Webinar Ownership
+        const webinar = await strapi.documents('api::webinar.webinar').findOne({
+            documentId: documentId,
+            populate: ['Team'],
+            status: 'draft'
+        });
+
+        if (!webinar || !webinar.Team || webinar.Team.id !== user.Team.id) {
+            return ctx.forbidden('You do not have permission to manage this webinar');
+        }
+
+        // 2. Find the registration and verify it belongs to this webinar
+        const registration = await strapi.db.query('api::registration-data.registration-data').findOne({
+            where: {
+                documentId: regId,
+                Webinar: webinar.id
+            }
+        });
+
+        if (!registration) {
+            return ctx.notFound('Registration not found for this webinar');
+        }
+
+        // 3. Update Status to approved
+        try {
+            await strapi.db.query('api::registration-data.registration-data').update({
+                where: { id: registration.id },
+                data: { Status: 'approved' }
+            });
+            return { data: { id: registration.id, documentId: regId, Status: 'approved' } };
+        } catch (err) {
+            console.error('[PortalAdmin] approveRegistration Error:', err);
+            return ctx.badRequest('Failed to approve registration');
+        }
+    },
+
+    // Reject or un-reject a single registration
+    async rejectRegistration(ctx) {
+        const user = await this.verifyAuth(ctx);
+        if (!user || !user.Team) return ctx.forbidden('Access denied');
+
+        const { documentId, regId } = ctx.params;
+
+        // 1. Verify Webinar Ownership
+        const webinar = await strapi.documents('api::webinar.webinar').findOne({
+            documentId: documentId,
+            populate: ['Team'],
+            status: 'draft'
+        });
+
+        if (!webinar || !webinar.Team || webinar.Team.id !== user.Team.id) {
+            return ctx.forbidden('You do not have permission to manage this webinar');
+        }
+
+        // 2. Find the registration
+        const registration = await strapi.db.query('api::registration-data.registration-data').findOne({
+            where: {
+                documentId: regId,
+                Webinar: webinar.id
+            }
+        });
+
+        if (!registration) {
+            return ctx.notFound('Registration not found for this webinar');
+        }
+
+        // 3. Toggle: if already rejected -> pending, otherwise -> rejected
+        const newStatus = registration.Status === 'rejected' ? 'pending' : 'rejected';
+
+        try {
+            await strapi.db.query('api::registration-data.registration-data').update({
+                where: { id: registration.id },
+                data: { Status: newStatus }
+            });
+            return { data: { id: registration.id, documentId: regId, Status: newStatus } };
+        } catch (err) {
+            console.error('[PortalAdmin] rejectRegistration Error:', err);
+            return ctx.badRequest('Failed to reject registration');
         }
     },
 
@@ -687,6 +769,42 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             });
 
 
+            // C. Registrations
+            const registrations = await strapi.db.query('api::registration-data.registration-data').findMany({
+                where: {
+                    Webinar: webinar.id,
+                    Is_Moderator: false
+                },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            const registrationList = registrations.map(r => {
+                const fv = r.Form_Values || {};
+                return {
+                    email: r.Email_Address || '',
+                    fullName: fv.Full_Name || fv.First_Name ? `${fv.First_Name || ''} ${fv.Last_Name || ''}`.trim() : (fv.Name || ''),
+                    approved: r.Status === 'approved',
+                    Status: r.Status || 'pending',
+                    registeredAt: r.createdAt,
+                    lastAccess: r.Last_Access_At || null,
+                    formValues: fv
+                };
+            });
+
+            // D. Survey Responses
+            const surveyResponses = await strapi.db.query('api::survey-response.survey-response').findMany({
+                where: {
+                    Webinar: webinar.id
+                },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            const surveyList = surveyResponses.map(sr => ({
+                email: sr.Email || '',
+                answers: sr.Answers || [],
+                submittedAt: sr.createdAt
+            }));
+
             return {
                 summary: {
                     webinarTitle: webinar.Webinar_Title,
@@ -699,7 +817,9 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
                 },
                 videos: videoStats,
                 users: [], // Legacy user list structure if needed, or omit
-                userVideoWatches
+                userVideoWatches,
+                registrations: registrationList,
+                surveyResponses: surveyList
             };
 
         } catch (err) {

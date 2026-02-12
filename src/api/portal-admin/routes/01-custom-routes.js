@@ -34,6 +34,10 @@ module.exports = {
         { method: 'GET', path: '/portal-admins/email-templates', handler: 'portal-admin.getEmailTemplates', config: { auth: false } },
         { method: 'POST', path: '/portal-admins/email-templates/create', handler: 'portal-admin.createEmailTemplate', config: { auth: false } },
         { method: 'PUT', path: '/portal-admins/email-templates/:id', handler: 'portal-admin.updateEmailTemplate', config: { auth: false } },
-        { method: 'DELETE', path: '/portal-admins/email-templates/:id', handler: 'portal-admin.deleteEmailTemplate', config: { auth: false } }
+        { method: 'DELETE', path: '/portal-admins/email-templates/:id', handler: 'portal-admin.deleteEmailTemplate', config: { auth: false } },
+
+        // Registration Management
+        { method: 'PUT', path: '/portal-admins/webinar/:documentId/registrations/:regId/approve', handler: 'portal-admin.approveRegistration', config: { auth: false } },
+        { method: 'PUT', path: '/portal-admins/webinar/:documentId/registrations/:regId/reject', handler: 'portal-admin.rejectRegistration', config: { auth: false } }
     ],
 };

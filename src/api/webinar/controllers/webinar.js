@@ -252,6 +252,90 @@ module.exports = createCoreController('api::webinar.webinar', ({ strapi }) => ({
         }
     },
 
+    async endWebinar(ctx) {
+        const { id } = ctx.params;
+
+        // Fetch webinar to find ZOOM ID
+        const webinar = await strapi.documents('api::webinar.webinar').findOne({
+            documentId: id,
+            populate: ['Zoom_Setup_Config'],
+        });
+
+        if (!webinar) {
+            return ctx.notFound('Webinar not found');
+        }
+
+        const zoomId = webinar.Zoom_Setup_Config?.Zoom_Webinar_ID;
+        if (!zoomId) {
+            return ctx.badRequest('No Zoom ID associated with this webinar');
+        }
+
+        try {
+            const isWebinar = webinar.EventType === 'Webinar';
+            await strapi.service('api::webinar.zoom').endEvent(zoomId, isWebinar);
+
+            // Optionally update local status if needed, but for now just end it on Zoom
+            ctx.send({ message: 'Webinar ended successfully' });
+        } catch (err) {
+            strapi.log.error('End Webinar Error:', err);
+            return ctx.badRequest('Failed to end webinar', { details: err.response?.data });
+        }
+    },
+
+    async getModeratorZak(ctx) {
+        const { id } = ctx.params;
+
+        // Fetch webinar to find ZOOM ID
+        const webinar = await strapi.documents('api::webinar.webinar').findOne({
+            documentId: id,
+            populate: ['Zoom_Setup_Config'],
+        });
+
+        if (!webinar) {
+            return ctx.notFound('Webinar not found');
+        }
+
+        const zoomId = webinar.Zoom_Setup_Config?.Zoom_Webinar_ID;
+        if (!zoomId) {
+            return ctx.badRequest('No Zoom ID associated with this webinar');
+        }
+
+        // Determine Host Email Dynamically from Zoom API
+        // This ensures we get the ZAK for the ACTUAL owner, even if our DB is out of sync.
+        let hostEmail;
+        try {
+            const isWebinar = webinar.EventType === 'Webinar';
+            const zoomDetails = await strapi.service('api::webinar.zoom').getEventDetails(zoomId, isWebinar);
+            hostEmail = zoomDetails.host_email;
+            strapi.log.info(`[getModeratorZak] Resolved Real Host Email from Zoom: ${hostEmail}`);
+        } catch (err) {
+            strapi.log.error('Failed to get Zoom Details:', err);
+            // Fallback to config/env if Zoom fetch fails (unlikely if ID is valid)
+            const zoomConfig = webinar.Zoom_Setup_Config || {};
+            hostEmail = zoomConfig.Zoom_Host_Email || process.env.ZOOM_DEFAULT_HOST_EMAIL;
+        }
+
+        if (!hostEmail) {
+            return ctx.badRequest('Host email could not be determined');
+        }
+
+        try {
+            const zakData = await strapi.service('api::webinar.zoom').getModeratorZak(hostEmail);
+            ctx.send({
+                zak: zakData.token,
+                hostEmail: hostEmail // Send back the resolved host email
+            });
+        } catch (err) {
+            strapi.log.error('ZAK Fetch Error:', err);
+            // Return more details to the client for debugging
+            return ctx.badRequest('Failed to fetch Zak Token', {
+                hostEmail,
+                message: err.message,
+                details: err.response?.data
+            });
+        }
+    },
+
     async getZoomSignature(ctx) {
         const { id } = ctx.params;
         const { role } = ctx.query; // 0 for participant, 1 for host
@@ -373,6 +457,72 @@ module.exports = createCoreController('api::webinar.webinar', ({ strapi }) => ({
         } catch (error) {
             strapi.log.error('Zoom Reset Error:', error);
             return ctx.badRequest('Failed to reset Zoom integration: ' + error.message);
+        }
+    },
+
+    async getReports(ctx) {
+        const { id } = ctx.params;
+
+        // 1. Auth & Validation
+        let portalUser = null;
+        try {
+            const authHeader = ctx.request.header.authorization;
+            const token = authHeader.replace('Bearer ', '');
+            const payload = await strapi.plugin('users-permissions').service('jwt').verify(token);
+            portalUser = await strapi.entityService.findOne('api::portal-admin.portal-admin', payload.id, {
+                populate: ['Team']
+            });
+        } catch (e) {
+            return ctx.unauthorized();
+        }
+
+        const webinar = await strapi.documents('api::webinar.webinar').findOne({
+            documentId: id,
+            populate: ['Zoom_Setup_Config', 'Team'],
+        });
+
+        if (!webinar || !webinar.Team || (portalUser && webinar.Team.id !== portalUser.Team.id)) {
+            return ctx.forbidden();
+        }
+
+        if (!webinar.Zoom_Setup_Config?.Zoom_Webinar_ID) {
+            return ctx.notFound('No Zoom Event ID found for this webinar.');
+        }
+
+        try {
+            const reports = await strapi.service('api::webinar.zoom').getEventReports(
+                webinar.Zoom_Setup_Config.Zoom_Webinar_ID,
+                webinar.EventType
+            );
+
+            // Async Update: Persist summary data for List View performance
+            // We use 'webinar.documentId' because getReports fetched it via documentId.
+            // But updateWebinarReport expects ID. Strapi 5 Documents use documentId, check service.
+            // Service uses entityService.update which expects documentId in v5? Or ID?
+            // The service I wrote uses entityService.update(..., webinarId, ...)
+            // In Strapi 5, entityService methods often take documentId depending on config, but standard is ID for SQL relations
+            // Wait, I used 'webinar.id' in the Cron job which comes from findMany.
+            // Let's use documentId if the previous fetching used documents().
+            // Ideally passing the numeric ID is safer if the service expects it.
+            // The previous 'findOne' returned a document, which has 'id' (numeric) AND 'documentId'.
+            // I'll pass 'webinar.documentId' to be safe for modern Strapi, 
+            // BUT let's check the service implementation again. 
+            // The service does `strapi.entityService.update('api::webinar.webinar', webinarId, ...)`
+            // In Strapi 5, entityService.update 2nd arg is documentId usually. 
+            // If the service uses `webinarId` as variable name, it implies numeric ID?
+            // Let's pass `webinar.documentId` to be consistent with modern Strapi usage.
+
+            // Fire and forget (don't await) to speed up UI? 
+            // Better to await to ensure consistency for first load if fast enough, 
+            // or let it be async. Given we return 'reports' directly from Zoom, 
+            // the DB update is side-effect.
+            strapi.service('api::webinar.zoom').updateWebinarReport(webinar.documentId, webinar.Zoom_Setup_Config.Zoom_Webinar_ID)
+                .catch(err => strapi.log.error('Background Report Update Failed:', err));
+
+            return ctx.send(reports);
+        } catch (error) {
+            strapi.log.error('Zoom Report Fetch Error:', error);
+            return ctx.badRequest('Failed to fetch Zoom reports: ' + error.message);
         }
     }
 }));
