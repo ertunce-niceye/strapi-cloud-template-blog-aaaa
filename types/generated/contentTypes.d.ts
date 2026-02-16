@@ -440,7 +440,7 @@ export interface ApiCompanyCompany extends Struct.CollectionTypeSchema {
     singularName: 'company';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     AllowedTemplates: Schema.Attribute.Relation<
@@ -577,7 +577,7 @@ export interface ApiOndemandVideoOndemandVideo
     singularName: 'ondemand-video';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   pluginOptions: {
     i18n: {
@@ -807,7 +807,7 @@ export interface ApiRegistrationDataRegistrationData
     singularName: 'registration-data';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   pluginOptions: {
     i18n: {
@@ -884,7 +884,7 @@ export interface ApiSpeakerSpeaker extends Struct.CollectionTypeSchema {
     singularName: 'speaker';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   pluginOptions: {
     i18n: {

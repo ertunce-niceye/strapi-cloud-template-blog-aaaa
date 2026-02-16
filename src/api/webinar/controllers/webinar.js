@@ -164,16 +164,96 @@ module.exports = createCoreController('api::webinar.webinar', ({ strapi }) => ({
 
         // 3. Send Emails
         const emailService = strapi.plugin('email').service('email');
+
+        // --- Helper: Format Date for ICS ---
+        const formatDateToICS = (dateStr) => {
+            const date = new Date(dateStr);
+            return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        };
+
+        // --- Helper: Generate ICS Content ---
+        const generateIcs = (title, description, location, startDate, durationStr) => {
+            const start = new Date(startDate);
+
+            // Parse Duration (simple fallback)
+            let durationMinutes = 60;
+            if (durationStr) {
+                const parsed = parseInt(durationStr);
+                if (!isNaN(parsed)) durationMinutes = parsed;
+            }
+
+            const end = new Date(start.getTime() + durationMinutes * 60000);
+            const now = new Date();
+
+            const uid = `${now.getTime()}@vistreamtv.com`;
+            const dtStamp = formatDateToICS(now.toISOString());
+            const dtStart = formatDateToICS(start.toISOString());
+            const dtEnd = formatDateToICS(end.toISOString());
+
+            return `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//ViStream//Webinar Dry Run//EN
+METHOD:REQUEST
+BEGIN:VEVENT
+UID:${uid}
+DTSTAMP:${dtStamp}
+DTSTART:${dtStart}
+DTEND:${dtEnd}
+SUMMARY:${title}
+DESCRIPTION:${description}
+LOCATION:${location}
+STATUS:CONFIRMED
+SEQUENCE:0
+ORGANIZER;CN=ViStream:mailto:${process.env.SENDGRID_DEFAULT_FROM || 'noreply@vistreamtv.com'}
+ATTENDEE;RSVP=TRUE:mailto:recipient@example.com
+END:VEVENT
+END:VCALENDAR`.replace(/\n/g, '\r\n');
+        };
+
+        const timeZone = webinar.EventTimeZone || 'UTC';
+        const formattedDate = new Date(targetDate).toLocaleString('en-US', {
+            timeZone: timeZone,
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZoneName: 'short'
+        });
+
+        // Generate ICS attachment
+        const icsContent = generateIcs(
+            `Dry Run: ${webinar.Webinar_Title}`,
+            `Join Link: ${joinLink}`,
+            joinLink,
+            targetDate,
+            webinar.EventDuration
+        );
+
         const emailPromises = Array.from(recipients).map(to => {
+            // Personalize ICS for auto-add (Update Attendee)
+            // Note: For true auto-add, each recipient ideally needs their own ICS with them as Attendee,
+            // or we use a generic method. Method:REQUEST usually works well.
+            const personalizedIcs = icsContent.replace('mailto:recipient@example.com', `mailto:${to}`);
+
             return emailService.send({
                 to,
                 from: process.env.SENDGRID_DEFAULT_FROM || 'noreply@vistreamtv.com',
                 subject: `Dry Run Invite: ${webinar.Webinar_Title}`,
-                text: `You are invited to the Dry Run for "${webinar.Webinar_Title}".\n\nDate: ${new Date(targetDate).toLocaleString()}\nLink: ${joinLink}\n\nSee you there!`,
+                text: `You are invited to the Dry Run for "${webinar.Webinar_Title}".\n\nDate: ${formattedDate}\nLink: ${joinLink}\n\nSee you there!`,
                 html: `<p>You are invited to the Dry Run for <strong>${webinar.Webinar_Title}</strong>.</p>
-               <p><strong>Date:</strong> ${new Date(targetDate).toLocaleString()}</p>
+               <p><strong>Date:</strong> ${formattedDate}</p>
                <p><strong>Link:</strong> <a href="${joinLink}">${joinLink}</a></p>
                <p>See you there!</p>`,
+                attachments: [
+                    {
+                        filename: 'invite.ics',
+                        content: Buffer.from(personalizedIcs).toString('base64'),
+                        type: 'text/calendar',
+                        disposition: 'attachment',
+                    }
+                ]
             });
         });
 

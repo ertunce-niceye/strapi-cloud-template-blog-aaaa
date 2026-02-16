@@ -7,7 +7,7 @@
     "displayName": "Speaker"
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {
     "i18n": {

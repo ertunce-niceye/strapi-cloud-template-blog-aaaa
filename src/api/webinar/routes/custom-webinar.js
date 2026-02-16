@@ -28,7 +28,7 @@ module.exports = {
         },
         {
             method: 'POST',
-            path: '/portal-admins/webinar/:id/dry-run-invite',
+            path: '/webinars/:id/dry-run-invite',
             handler: 'api::webinar.webinar.sendDryRunInvite',
             config: {
                 auth: false,

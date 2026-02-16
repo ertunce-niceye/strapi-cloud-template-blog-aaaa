@@ -25,7 +25,7 @@ module.exports = ({ env }) => ({
             autoOrientation: false,
             // providerOptions for local are strictly needed?
             providerOptions: {
-                sizeLimit: 1000000, // Not used by local but just in case
+                sizeLimit: 250 * 1024 * 1024,
             }
         },
     },

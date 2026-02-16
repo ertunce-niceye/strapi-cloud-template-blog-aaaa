@@ -541,10 +541,11 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
                 'Speakers',
                 'Related_Webinars',
                 'Moderator_List',
-                'Evaluation_Survey',
+                'Evaluation_Survey.Questions.Question_Options',
                 'Registration_Definition',
-                'Landing_Page_Layout',
-                'Watching_Page_Layout',
+                'Landing_Page_Layout.Agenda_Items.Speaker_Relation',
+                'Landing_Page_Layout.Image',
+                'Watching_Page_Layout.Live_Resources',
                 'OnDemandVideos',
                 'Email_Config',
                 'Email_Config.Reminder_Emails', // CRITICAL: Deep populate for Reminder list
@@ -638,25 +639,32 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             return ctx.forbidden('You do not have permission to manage this webinar');
         }
 
-        // 2. Find the registration and verify it belongs to this webinar
-        const registration = await strapi.db.query('api::registration-data.registration-data').findOne({
-            where: {
-                documentId: regId,
-                Webinar: webinar.id
-            }
+        // 2. Find the registration
+        const registration = await strapi.documents('api::registration-data.registration-data').findOne({
+            documentId: regId, // regId is passed as documentId from frontend now? Or we should check layout.
+            // Note: The route param is :regId. The frontend likely sends documentId.
+            populate: ['Webinar']
         });
 
         if (!registration) {
-            return ctx.notFound('Registration not found for this webinar');
+            return ctx.notFound('Registration not found');
         }
 
-        // 3. Update Status to approved
+        // Verify it belongs to webinar (using ID check)
+        if (!registration.Webinar || registration.Webinar.id !== webinar.id) {
+            // In v5 documentId relation check might be different, but ID check is safer if populated.
+            return ctx.badRequest('Registration does not belong to this webinar');
+        }
+
+        // 3. Update Status to approved using Document Service
         try {
-            await strapi.db.query('api::registration-data.registration-data').update({
-                where: { id: registration.id },
-                data: { Status: 'approved' }
+            const updated = await strapi.documents('api::registration-data.registration-data').update({
+                documentId: regId,
+                data: { Status: 'approved' },
+                status: 'published' // Ensure it's published so API sees it
             });
-            return { data: { id: registration.id, documentId: regId, Status: 'approved' } };
+
+            return { data: updated };
         } catch (err) {
             console.error('[PortalAdmin] approveRegistration Error:', err);
             return ctx.badRequest('Failed to approve registration');
@@ -681,27 +689,31 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             return ctx.forbidden('You do not have permission to manage this webinar');
         }
 
-        // 2. Find the registration
-        const registration = await strapi.db.query('api::registration-data.registration-data').findOne({
-            where: {
-                documentId: regId,
-                Webinar: webinar.id
-            }
+        // 2. Find registration
+        const registration = await strapi.documents('api::registration-data.registration-data').findOne({
+            documentId: regId,
+            populate: ['Webinar']
         });
 
         if (!registration) {
-            return ctx.notFound('Registration not found for this webinar');
+            return ctx.notFound('Registration not found');
         }
 
-        // 3. Toggle: if already rejected -> pending, otherwise -> rejected
+        if (!registration.Webinar || registration.Webinar.id !== webinar.id) {
+            return ctx.badRequest('Registration does not belong to this webinar');
+        }
+
+        // 3. Toggle Status
         const newStatus = registration.Status === 'rejected' ? 'pending' : 'rejected';
 
         try {
-            await strapi.db.query('api::registration-data.registration-data').update({
-                where: { id: registration.id },
-                data: { Status: newStatus }
+            const updated = await strapi.documents('api::registration-data.registration-data').update({
+                documentId: regId,
+                data: { Status: newStatus },
+                status: 'published'
             });
-            return { data: { id: registration.id, documentId: regId, Status: newStatus } };
+
+            return { data: updated };
         } catch (err) {
             console.error('[PortalAdmin] rejectRegistration Error:', err);
             return ctx.badRequest('Failed to reject registration');
@@ -1002,75 +1014,90 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
     },
 
     async updateWebinar(ctx) {
-        const user = await this.verifyAuth(ctx);
-        if (!user || !user.Team) throw new ApplicationError('No Team assigned');
-
-        const { documentId } = ctx.params;
-        const { data } = ctx.request.body;
-
-        const existing = await strapi.documents('api::webinar.webinar').findOne({
-            documentId: documentId,
-            populate: ['Team'],
-            status: 'draft'
-        });
-
-        if (!existing) return ctx.notFound();
-
-        if (!existing.Team || existing.Team.id !== user.Team.id) {
-            return ctx.forbidden('You do not have permission to edit this webinar');
-        }
-
-        // Lazy create folder if missing?
-        let folderUpdate = {};
-        if (!existing.media_folder_id && data.Webinar_Title && !data.media_folder_id) {
-            try {
-                // Check if we should create one. 
-                // Only if title changed? Or just ensuring it has one.
-                // Let's create one if it doesn't exist.
-                const folderName = data.Webinar_Title || existing.Webinar_Title || 'Webinar Folder';
-                const folder = await strapi.plugin('upload').service('folder').create({
-                    name: folderName,
-                    parent: null
-                });
-                if (folder) folderUpdate.media_folder_id = folder.id;
-            } catch (folderErr) {
-                console.error('[PortalAdmin] Failed to create lazy media folder:', folderErr);
-            }
-            if (folderUpdate.media_folder_id) {
-                console.log('[PortalAdmin] updateWebinar -> lazy created folder:', folderUpdate.media_folder_id);
-            }
-        }
-
-        const updated = await strapi.documents('api::webinar.webinar').update({
-            documentId: documentId,
-            data: { ...data, ...folderUpdate },
-            status: 'draft',
-            populate: ['Speakers', 'Moderator_List', 'Zoom_Setup_Config']
-        });
-
-        // Refetch to be absolutely sure we have the latest media_folder_id and other fields
-        const finalWebinar = await strapi.documents('api::webinar.webinar').findOne({
-            documentId: documentId,
-            status: 'draft',
-            populate: ['Speakers', 'Moderator_List', 'Zoom_Setup_Config']
-        });
-
-        // Restore publishedAt info if exists
         try {
-            const published = await strapi.documents('api::webinar.webinar').findOne({
-                documentId: documentId,
-                fields: ['publishedAt', 'updatedAt'],
-                status: 'published'
-            });
-            if (published) {
-                finalWebinar.publishedAt = published.publishedAt;
-                finalWebinar.isModified = true;
-            }
-        } catch (e) {
-            // ignore
-        }
+            const user = await this.verifyAuth(ctx);
+            if (!user || !user.Team) throw new ApplicationError('No Team assigned');
 
-        return { data: finalWebinar };
+            const { documentId } = ctx.params;
+            const { data } = ctx.request.body;
+
+            // Prevent updating ID fields
+            delete data.id;
+            delete data.documentId;
+
+            const existing = await strapi.documents('api::webinar.webinar').findOne({
+                documentId: documentId,
+                populate: ['Team'],
+                status: 'draft'
+            });
+
+            if (!existing) return ctx.notFound();
+
+            if (!existing.Team || existing.Team.id !== user.Team.id) {
+                return ctx.forbidden('You do not have permission to edit this webinar');
+            }
+
+            // Lazy create folder if missing?
+            let folderUpdate = {};
+            if (!existing.media_folder_id && data.Webinar_Title && !data.media_folder_id) {
+                try {
+                    // Check if we should create one. 
+                    // Only if title changed? Or just ensuring it has one.
+                    // Let's create one if it doesn't exist.
+                    const folderName = data.Webinar_Title || existing.Webinar_Title || 'Webinar Folder';
+                    // Check if folder exists by name? No, just create new one for now or skip check.
+                    // Actually, if we just create every time it's bad.
+                    // But here we check !existing.media_folder_id
+
+                    const folder = await strapi.plugin('upload').service('folder').create({
+                        name: folderName,
+                        parent: null
+                    });
+                    if (folder) folderUpdate.media_folder_id = folder.id;
+                    if (folder) console.log('[PortalAdmin] lazy created folder:', folder.id);
+                } catch (folderErr) {
+                    console.error('[PortalAdmin] Failed to create lazy media folder:', folderErr);
+                }
+            }
+
+            const updated = await strapi.documents('api::webinar.webinar').update({
+                documentId: documentId,
+                data: { ...data, ...folderUpdate },
+                status: 'draft',
+                populate: ['Speakers', 'Moderator_List', 'Zoom_Setup_Config']
+            });
+
+            // Refetch to be absolutely sure we have the latest media_folder_id and other fields
+            const finalWebinar = await strapi.documents('api::webinar.webinar').findOne({
+                documentId: documentId,
+                status: 'draft',
+                populate: ['Speakers', 'Moderator_List', 'Zoom_Setup_Config']
+            });
+
+
+            // Restore publishedAt info if exists
+            try {
+                const published = await strapi.documents('api::webinar.webinar').findOne({
+                    documentId: documentId,
+                    fields: ['publishedAt', 'updatedAt'],
+                    status: 'published'
+                });
+                if (published) {
+                    finalWebinar.publishedAt = published.publishedAt;
+                    finalWebinar.isModified = true;
+                }
+            } catch (e) {
+                // ignore
+            }
+
+            return { data: finalWebinar };
+        } catch (e) {
+            console.error('[PortalAdmin] updateWebinar Error:', JSON.stringify(e, null, 2));
+            if (e.details) {
+                console.error('[PortalAdmin] Validation Details:', JSON.stringify(e.details, null, 2));
+            }
+            throw e; // Rethrow to let Strapi handle the response format
+        }
     },
 
 
@@ -1487,7 +1514,8 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             }
 
             strapi.log.error('Portal upload failed:', e);
-            console.error('[PortalAdmin] Upload Exception:', e);
+            console.error('[PortalAdmin] Upload Exception:', JSON.stringify(e, null, 2));
+            if (e.details) console.error('[PortalAdmin] Error Details:', JSON.stringify(e.details, null, 2));
             throw new ApplicationError('Upload service failed: ' + e.message);
         }
     },
