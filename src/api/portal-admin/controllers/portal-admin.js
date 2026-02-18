@@ -14,28 +14,22 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
     // Helper for safe auth
     async verifyAuth(ctx) {
         const authHeader = ctx.request.header.authorization || ctx.request.get('Authorization');
-        console.log('[PortalAdmin] verifyAuth Header:', authHeader); // DEBUG LOG
         if (!authHeader) {
-            console.log('[PortalAdmin] Auth: No header');
             return null;
         }
         const token = authHeader.replace('Bearer ', '');
         try {
             const payload = await strapi.plugin('users-permissions').service('jwt').verify(token);
             if (payload.type !== 'portal-admin') {
-                console.log('[PortalAdmin] Auth: Invalid payload type', payload.type);
                 return null;
             }
 
             // 3. Get User (Fix: use db.query to handle Integer ID from JWT)
-            console.log('[PortalAdmin] verifyAuth Payload:', payload);
-
             const user = await strapi.db.query('api::portal-admin.portal-admin').findOne({
                 where: { id: payload.id },
                 populate: ['Team', 'Company']
             });
 
-            if (!user) console.log('[PortalAdmin] Auth: User not found for ID', payload.id);
             return user;
         } catch (e) {
             console.error('Auth verification failed:', e.message);
@@ -45,7 +39,6 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
 
     async debugFix(ctx) {
         const targetEmail = 'ertunc.eryilmaz@niceye.com';
-        console.log('[PortalAdmin] Running Debug Fix for:', targetEmail);
 
         const user = await strapi.db.query('api::portal-admin.portal-admin').findOne({
             where: { Email: targetEmail }
@@ -84,7 +77,6 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
 
         // Fallback: Check if password is stored as plain text (Dev manual entry)
         if (!validPassword && password === user.Password) {
-            console.log('[PortalAdmin] Plain text password detected. Hashing and updating...');
             const hashedPassword = await bcrypt.hash(password, 10);
             await strapi.db.query('api::portal-admin.portal-admin').update({
                 where: { id: user.id },
@@ -135,8 +127,6 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
                 });
             } catch (emailErr) {
                 console.error('[PortalAdmin] Login Email Error:', emailErr);
-                // Continue to allow testing (if using console logs for code)
-                console.log('Login OTP Code:', code);
             }
 
             // Return Temp Token (Identifies the pending login session securely)
@@ -1025,6 +1015,96 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
             delete data.id;
             delete data.documentId;
 
+            // Strip deeply-populated fields managed by separate endpoints.
+            // When getWebinar populates these deeply, sending them back
+            // as full objects causes Strapi validation errors (400).
+            delete data.Email_Config;
+            delete data.Zoom_Setup_Config;
+            delete data.Company;
+            delete data.Team;
+            delete data.Evaluation_Survey;
+            delete data.Registration_Definition;
+            delete data.OnDemandVideos;
+            delete data.createdAt;
+            delete data.updatedAt;
+            delete data.publishedAt;
+            delete data.isModified;
+
+            // --- Fix 1: Filter out unregistered components from dynamic zones ---
+            if (Array.isArray(data.Landing_Page_Layout)) {
+                data.Landing_Page_Layout = data.Landing_Page_Layout.filter(item => {
+                    // section-related-webinars is not registered in the Landing_Page_Layout DZ schema
+                    return item.__component !== 'page-sections.section-related-webinars';
+                });
+            }
+
+            // --- Fix 2: Normalize relations from { set: [{id}] } to documentId arrays ---
+            // When data comes back from a previous save, Strapi returns relations
+            // in Entity Service format { set: [{id: N}] }. The Document Service
+            // expects arrays of documentIds or connect/disconnect objects.
+            const normalizeRelation = async (fieldData, contentType) => {
+                if (!fieldData) return undefined; // don't touch if not present
+                let ids = [];
+                if (fieldData.set && Array.isArray(fieldData.set)) {
+                    ids = fieldData.set.map(item => item.id || item);
+                } else if (Array.isArray(fieldData)) {
+                    ids = fieldData.map(item =>
+                        typeof item === 'object' ? (item.documentId || item.id || item) : item
+                    );
+                } else {
+                    return fieldData; // unknown format, pass through
+                }
+                // Convert numeric IDs to documentIds
+                if (ids.length > 0 && typeof ids[0] === 'number') {
+                    try {
+                        const entries = await strapi.db.query(contentType).findMany({
+                            where: { id: { $in: ids } },
+                            select: ['id', 'documentId'],
+                        });
+                        const idToDocId = {};
+                        entries.forEach(e => { idToDocId[e.id] = e.documentId; });
+                        return ids.map(id => idToDocId[id]).filter(Boolean);
+                    } catch (err) {
+                        console.error(`[PortalAdmin] Failed to resolve documentIds for ${contentType}:`, err.message);
+                        return ids; // fallback to original
+                    }
+                }
+                return ids;
+            };
+
+            if (data.Speakers) {
+                data.Speakers = await normalizeRelation(data.Speakers, 'api::speaker.speaker');
+            }
+            if (data.Related_Webinars) {
+                data.Related_Webinars = await normalizeRelation(data.Related_Webinars, 'api::webinar.webinar');
+            }
+            if (data.Moderator_List && Array.isArray(data.Moderator_List)) {
+                // Moderator_List is a repeatable component, strip relation-like wrappers
+                data.Moderator_List = data.Moderator_List.map(m => ({
+                    id: m.id,
+                    Email: m.Email,
+                    Description: m.Description || null,
+                }));
+            }
+
+            // Normalize Speaker_Relation inside Landing_Page_Layout agenda items
+            if (Array.isArray(data.Landing_Page_Layout)) {
+                for (const block of data.Landing_Page_Layout) {
+                    if (block.__component === 'page-sections.section-agenda-block' && Array.isArray(block.Agenda_Items)) {
+                        for (const item of block.Agenda_Items) {
+                            if (item.Speaker_Relation) {
+                                item.Speaker_Relation = await normalizeRelation(item.Speaker_Relation, 'api::speaker.speaker');
+                            }
+                        }
+                    }
+                    // Normalize Image media relation in hero block
+                    if (block.__component === 'page-sections.section-hero' && Array.isArray(block.Image)) {
+                        block.Image = block.Image.map(img =>
+                            typeof img === 'object' ? (img.id || img) : img
+                        );
+                    }
+                }
+            }
             const existing = await strapi.documents('api::webinar.webinar').findOne({
                 documentId: documentId,
                 populate: ['Team'],
@@ -1060,6 +1140,7 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
                 }
             }
 
+            console.log('[PortalAdmin] updateWebinar data keys:', Object.keys({ ...data, ...folderUpdate }));
             const updated = await strapi.documents('api::webinar.webinar').update({
                 documentId: documentId,
                 data: { ...data, ...folderUpdate },
@@ -1092,6 +1173,8 @@ module.exports = createCoreController('api::portal-admin.portal-admin', ({ strap
 
             return { data: finalWebinar };
         } catch (e) {
+            console.error('[PortalAdmin] updateWebinar Error Name:', e.name);
+            console.error('[PortalAdmin] updateWebinar Error Message:', e.message);
             console.error('[PortalAdmin] updateWebinar Error:', JSON.stringify(e, null, 2));
             if (e.details) {
                 console.error('[PortalAdmin] Validation Details:', JSON.stringify(e.details, null, 2));

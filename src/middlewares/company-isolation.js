@@ -31,7 +31,6 @@ module.exports = (config, { strapi }) => {
             return next();
         }
 
-        console.log(`[Team Isolation] Active for User ${ctx.state.user.id} (Team: ${userTeam.id} - ${userTeam.Name})`);
 
         const url = ctx.request.url;
         const method = ctx.request.method;
@@ -47,11 +46,9 @@ module.exports = (config, { strapi }) => {
 
         // --- HANDLE MEDIA LIBRARY (/upload/files AND /upload/folders) ---
         if (url.startsWith("/upload")) {
-            console.log(`[Team Isolation] Media Library Request: ${method} ${url}`);
 
             // SKIP POST requests entirely - they are file uploads and should not be filtered
             if (method === "POST") {
-                console.log(`[Team Isolation] Skipping POST upload request`);
                 return next();
             }
 
@@ -64,7 +61,6 @@ module.exports = (config, { strapi }) => {
                         { team: { [filterKey]: { $eq: filterValue } } },
                         { createdBy: { id: { $eq: ctx.state.user.id } } }
                     ];
-                    console.log(`[Team Isolation] Applied Media Filter: Team=${filterValue} OR Owner=${ctx.state.user.id}`);
                 }
             }
             return next();
@@ -99,14 +95,12 @@ module.exports = (config, { strapi }) => {
                     sourceField = relParts[2]?.split("?")[0];
                 }
 
-                console.log(`[Team Isolation] Intercepting Relation: Model=${sourceModelUID}, Field=${sourceField}`);
 
                 const sourceModel = strapi.getModel(sourceModelUID);
                 if (sourceModel && sourceModel.attributes[sourceField]) {
                     const attr = sourceModel.attributes[sourceField];
                     const targetModelUID = attr.target;
 
-                    console.log(`[Team Isolation] Relation Target: ${targetModelUID}`);
 
                     if (modelMapping[targetModelUID]) {
                         const relationPath = modelMapping[targetModelUID];
@@ -126,7 +120,6 @@ module.exports = (config, { strapi }) => {
                             const lastPart = pathParts[pathParts.length - 1];
                             currentFilter[lastPart] = { [filterKey]: { $eq: filterValue } };
                         }
-                        console.log(`[Team Isolation] Applied Relation Filter:`, JSON.stringify(ctx.query.filters));
                     }
                 }
             }
@@ -153,7 +146,6 @@ module.exports = (config, { strapi }) => {
                 if (method === "GET" && userCompany) {
                     if (!ctx.query.filters) ctx.query.filters = {};
                     ctx.query.filters[companyFilterKey] = { $eq: companyFilterValue };
-                    console.log(`[Team Isolation] Company Filter Applied: ${companyFilterKey}=${companyFilterValue}`);
                 }
                 return next();
             }
@@ -185,8 +177,6 @@ module.exports = (config, { strapi }) => {
                         [companyFilterKey]: { $eq: companyFilterValue }
                     };
                 }
-
-                console.log(`[Team Isolation] Filter Applied for ${modelUID}:`, JSON.stringify(ctx.query.filters, null, 2));
 
 
             } else if (method === "PUT" || method === "DELETE") {
